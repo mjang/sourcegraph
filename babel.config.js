@@ -4,10 +4,17 @@ const path = require('path')
 const semver = require('semver')
 const logger = require('signale')
 
+// TODO(bazel): drop when non-bazel removed.
+const IS_BAZEL = !!process.env.BAZEL_BINDIR
+
 /** @type {import('@babel/core').ConfigFunction} */
 module.exports = api => {
   const isTest = api.env('test')
   api.cache.forever()
+
+  if (process.env.BAZEL_TEST || IS_BAZEL && isTest) {
+    throw new Error("Don't use babel.config.js for tests under Bazel, use babel.config.jest.js instead")
+  }
 
   /**
    * Whether to instrument files with istanbul for code coverage.
@@ -19,6 +26,8 @@ module.exports = api => {
   }
 
   return {
+    // TODO(bazel): why does babel try to write to node_modules?
+    ignore: IS_BAZEL ? ['**/node_modules/**'] : [],
     presets: [
       // Can't put this in plugins because it needs to run as the last plugin.
       ...(instrument ? [{ plugins: [['babel-plugin-istanbul', { cwd: path.resolve(__dirname) }]] }] : []),
@@ -26,7 +35,7 @@ module.exports = api => {
         '@babel/preset-env',
         {
           // Node (used for testing) doesn't support modules, so compile to CommonJS for testing.
-          modules: isTest ? 'commonjs' : false,
+          modules: process.env.BABEL_MODULE ?? (isTest ? 'commonjs' : false),
           bugfixes: true,
           useBuiltIns: 'entry',
           include: [

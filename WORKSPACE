@@ -15,9 +15,9 @@ bazel_skylib_workspace()
 
 http_archive(
     name = "aspect_rules_js",
-    sha256 = "ad666b12324bab8bc151772bb2eff9aadace7bfd4d624157c2ac3931860d1c95",
-    strip_prefix = "rules_js-1.11.1",
-    url = "https://github.com/aspect-build/rules_js/archive/refs/tags/v1.11.1.tar.gz",
+    sha256 = "3ad6684d744ebbc6592d404cc3aa81d0da634eccb3499f6fd198ae122fa28489",
+    strip_prefix = "rules_js-1.19.0",
+    url = "https://github.com/aspect-build/rules_js/releases/download/v1.19.0/rules_js-v1.19.0.tar.gz",
 )
 
 http_archive(
@@ -28,16 +28,16 @@ http_archive(
 
 http_archive(
     name = "aspect_rules_ts",
-    sha256 = "e81f37c4fe014fc83229e619360d51bfd6cb8ac405a7e8018b4a362efa79d000",
-    strip_prefix = "rules_ts-1.0.4",
-    url = "https://github.com/aspect-build/rules_ts/archive/refs/tags/v1.0.4.tar.gz",
+    sha256 = "db77d904284d21121ae63dbaaadfd8c75ff6d21ad229f92038b415c1ad5019cc",
+    strip_prefix = "rules_ts-1.3.0",
+    url = "https://github.com/aspect-build/rules_ts/releases/download/v1.3.0/rules_ts-v1.3.0.tar.gz",
 )
 
 http_archive(
     name = "aspect_rules_jest",
-    sha256 = "f2be891d9b38473f08a336e5f6ca327bfdc90411b1798a1c476c6f6ceae54520",
-    strip_prefix = "rules_jest-0.13.1",
-    url = "https://github.com/aspect-build/rules_jest/archive/refs/tags/v0.13.1.tar.gz",
+    sha256 = "9f327ea58950c88274ea7243419256c74ae29a55399d2f5964eb7686c7a5660d",
+    strip_prefix = "rules_jest-0.15.0",
+    url = "https://github.com/aspect-build/rules_jest/archive/refs/tags/v0.15.0.tar.gz",
 )
 
 http_archive(
@@ -74,6 +74,13 @@ http_archive(
     urls = [
         "https://github.com/protocolbuffers/protobuf/archive/v3.15.0.tar.gz",
     ],
+)
+
+http_archive(
+    name = "aspect_bazel_lib",
+    sha256 = "ef83252dea2ed8254c27e65124b756fc9476be2b73a7799b7a2a0935937fc573",
+    strip_prefix = "bazel-lib-1.24.2",
+    url = "https://github.com/aspect-build/bazel-lib/releases/download/v1.24.2/bazel-lib-v1.24.2.tar.gz",
 )
 
 # Node toolchain setup ==========================
@@ -115,11 +122,35 @@ rules_jest_dependencies()
 
 load("@aspect_rules_jest//jest:repositories.bzl", "jest_repositories")
 
-jest_repositories(name = "jest")
+jest_repositories(
+    name = "jest",
+    jest_version = "v28.1.0",
+)
 
 load("@jest//:npm_repositories.bzl", jest_npm_repositories = "npm_repositories")
 
 jest_npm_repositories()
+
+# rules_webpack setup ===========================
+http_archive(
+    name = "aspect_rules_webpack",
+    sha256 = "0e1e7566a3ef8e7fc0a4fa2ef6bc2265e5d11d1400d94dc4d1399dbca8c5d38a",
+    strip_prefix = "rules_webpack-f08bb1930d9f287f7795ce391bd315d7c491296e",
+    # Include https://github.com/aspect-build/rules_webpack/commit/f08bb1930d9f287f7795ce391bd315d7c491296e
+    url = "https://github.com/aspect-build/rules_webpack/archive/f08bb1930d9f287f7795ce391bd315d7c491296e.tar.gz",
+)
+
+load("@aspect_rules_webpack//webpack:dependencies.bzl", "rules_webpack_dependencies")
+
+rules_webpack_dependencies()
+
+load("@aspect_rules_webpack//webpack:repositories.bzl", "webpack_repositories")
+
+webpack_repositories(name = "webpack")
+
+load("@webpack//:npm_repositories.bzl", webpack_npm_repositories = "npm_repositories")
+
+webpack_npm_repositories()
 
 # Go toolchain setup
 

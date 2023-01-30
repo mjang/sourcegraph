@@ -2,6 +2,11 @@
 
 const path = require('path')
 
+// TODO(bazel): drop when non-bazel removed.
+const IS_BAZEL = !!(process.env.BAZEL_BINDIR || process.env.BAZEL_TEST)
+const SRC_EXT = IS_BAZEL ? 'js' : 'ts'
+const rootDir = IS_BAZEL ? process.cwd() : __dirname
+
 // Use the same locale for test runs so that snapshots generated using code that
 // uses Intl or toLocaleString() are consistent.
 //
@@ -15,42 +20,43 @@ process.env.LANG = 'en_US.UTF-8'
 
 const ESM_NPM_DEPS = [
   'abortable-rx',
-  '@sourcegraph/comlink',
+  '@sourcegraph/.*',
   'monaco-editor',
   'monaco-yaml',
+  '@ampproject/.*',
   'marked',
   'date-fns',
   'react-sticky-box',
   'uuid',
   'vscode-languageserver-types',
-]
-  .join('|')
-  .replace(/\//g, '\\+')
+].join('|')
 
 /** @type {import('@jest/types').Config.InitialOptions} */
 const config = {
   // uses latest jsdom and exposes jsdom as a global,
   // for example to change the URL in window.location
-  testEnvironment: __dirname + '/client/shared/dev/jest-environment.js',
+  testEnvironment: '@sourcegraph/shared/dev/jest-environment',
 
   collectCoverage: !!process.env.CI,
-  collectCoverageFrom: ['<rootDir>/src/**/*.{ts,tsx}'],
+  collectCoverageFrom: [`<rootDir>/src/**/*.{${SRC_EXT},${SRC_EXT}x}`],
   coverageDirectory: '<rootDir>/coverage',
-  coveragePathIgnorePatterns: [/\/node_modules\//.source, /\.(test|story)\.tsx?$/.source, /\.d\.ts$/.source],
+  coveragePathIgnorePatterns: [/\/node_modules\//.source, /\.(test|story)\.[jt]sx?$/.source, /\.d\.ts$/.source],
   roots: ['<rootDir>/src'],
 
-  transform: { '\\.[jt]sx?$': ['babel-jest', { root: __dirname }] },
+  transform: {
+    [IS_BAZEL ? '\\.js$' : '\\.[jt]sx?$']: ['babel-jest', {
+      root: rootDir,
+      configFile: path.join(rootDir, IS_BAZEL ? 'babel.config.jest.js' : 'babel.config.js'),
+    }]
+  },
 
-  // Transform packages that do not distribute CommonJS packages (typically because they only distribute ES6
-  // modules). If you get an error from jest like "Jest encountered an unexpected token. ... SyntaxError:
-  // unexpected token import/export", then add it here. See
-  // https://github.com/facebook/create-react-app/issues/5241#issuecomment-426269242 for more information on why
-  // this is necessary.
+  // PNPM style rules_js version.
+  // See pnpm notes at https://jestjs.io/docs/configuration#transformignorepatterns-arraystring
   transformIgnorePatterns: [
     // packages within the root pnpm/rules_js package store
-    `<rootDir>/node_modules/.(aspect_rules_js|pnpm)/(?!(${ESM_NPM_DEPS})@)`,
+    `<rootDir>/node_modules/.(aspect_rules_js|pnpm)/(?!(${ESM_NPM_DEPS.replace('/', '\\+')})@)`,
     // files under a subdir: eg. '/packages/lib-a/'
-    `(../)+node_modules/.(aspect_rules_js|pnpm)/(?!(${ESM_NPM_DEPS})@)`,
+    `(../)+node_modules/.(aspect_rules_js|pnpm)/(?!(${ESM_NPM_DEPS.replace('/', '\\+')})@)`,
     // packages nested within another
     `node_modules/(?!.aspect_rules_js|.pnpm|${ESM_NPM_DEPS})`,
   ],
@@ -72,25 +78,26 @@ const config = {
   coverageReporters: ['json', 'lcov', 'text-summary'],
 
   setupFiles: [
-    path.join(__dirname, 'client/shared/dev/mockDate.js'),
+    '@sourcegraph/shared/dev/mockDate',
     // Needed for reusing API functions that use fetch
     // Neither NodeJS nor JSDOM have fetch + AbortController yet
-    require.resolve('abort-controller/polyfill'),
-    path.join(__dirname, 'client/shared/dev/fetch'),
-    path.join(__dirname, 'client/shared/dev/setLinkComponentForTest.ts'),
-    path.join(__dirname, 'client/shared/dev/mockDomRect.ts'),
-    path.join(__dirname, 'client/shared/dev/mockResizeObserver.ts'),
-    path.join(__dirname, 'client/shared/dev/mockUniqueId.ts'),
-    path.join(__dirname, 'client/shared/dev/mockSentryBrowser.ts'),
-    path.join(__dirname, 'client/shared/dev/mockMatchMedia.ts'),
+    'abort-controller/polyfill',
+    '@sourcegraph/shared/dev/fetch',
+    '@sourcegraph/shared/dev/setLinkComponentForTest',
+    '@sourcegraph/shared/dev/mockDomRect',
+    '@sourcegraph/shared/dev/mockResizeObserver',
+    '@sourcegraph/shared/dev/mockUniqueId',
+    '@sourcegraph/shared/dev/mockSentryBrowser',
+    '@sourcegraph/shared/dev/mockMatchMedia',
   ],
+
   setupFilesAfterEnv: [
-    require.resolve('core-js/stable'),
-    require.resolve('regenerator-runtime/runtime'),
-    require.resolve('@testing-library/jest-dom'),
-    path.join(__dirname, 'client/shared/dev/reactCleanup.ts'),
+    'core-js/stable',
+    'regenerator-runtime/runtime',
+    '@testing-library/jest-dom',
+    '@sourcegraph/shared/dev/reactCleanup',
   ],
-  globalSetup: path.join(__dirname, 'client/shared/dev/jestGlobalSetup.js'),
+  globalSetup: '@sourcegraph/shared/dev/jestGlobalSetup',
   globals: {
     Uint8Array,
   },
