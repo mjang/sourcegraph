@@ -1612,7 +1612,8 @@
           { "$ref": "#/definitions/GitHubAuthProvider" },
           { "$ref": "#/definitions/GitLabAuthProvider" },
           { "$ref": "#/definitions/BitbucketCloudAuthProvider" },
-          { "$ref": "#/definitions/GerritAuthProvider" }
+          { "$ref": "#/definitions/GerritAuthProvider" },
+          { "$ref": "#/definitions/AzureDevOpsAuthProvider" }
         ],
         "!go": {
           "taggedUnionType": true
@@ -2201,6 +2202,42 @@
           "type": "string",
           "description": "URL of the Gerrit instance, such as https://gerrit-review.googlesource.com or https://gerrit.example.com.",
           "default": "https://gerrit-review.googlesource.com/"
+        }
+      }
+    },
+    "AzureDevOpsAuthProvider": {
+      "description": "Azure auth provider",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "clientKey", "clientSecret"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "azureDevOps"
+        },
+        "url": {
+          "type": "string",
+          "description": "URL of the Azure instance.",
+          "default": "https://app.vssps.visualstudio.com/"
+        },
+        "clientID": {
+          "type": "string",
+          "description": "The app ID of the Azure OAuth app."
+        },
+        "clientSecret": {
+          "type": "string",
+          "description": "The client Secret of the Azure OAuth app."
+        },
+        "displayName": { "$ref": "#/definitions/AuthProviderCommon/properties/displayName" },
+        "apiScope": {
+          "type": "string",
+          "description": "The OAuth API scope that should be used",
+          "default": "vso.code,vso.identity"
+        },
+        "allowSignup": {
+          "description": "Allows new visitors to sign up for accounts Azure DevOps authentication. If false, users signing in via Azure DevOps must have an existing Sourcegraph account, which will be linked to their Azure DevOps identity after sign-in.",
+          "default": true,
+          "type": "boolean"
         }
       }
     },
