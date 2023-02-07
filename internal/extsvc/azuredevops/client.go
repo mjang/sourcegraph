@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"sync"
 
 	"github.com/sourcegraph/sourcegraph/internal/extsvc/auth"
 	"github.com/sourcegraph/sourcegraph/internal/httpcli"
@@ -63,6 +64,71 @@ func NewClient(urn string, config *schema.AzureDevOpsConnection, httpClient http
 			Password: config.Token,
 		},
 	}, nil
+}
+
+// TODO: Code organisation
+
+type ClientProvider struct {
+	// The URN of the external service that the client is derived from.
+	// TODO: Where is this used?
+	urn string
+
+	// baseURL is the base URL of GitLab; e.g., https://gitlab.com or https://gitlab.example.com
+	// TODO: Do I need thi?
+	baseURL *url.URL
+
+	// httpClient is the underlying the HTTP client to use.
+	httpClient httpcli.Doer
+
+	clients   map[string]*Client
+	clientsMu sync.Mutex
+}
+
+// GetOAuthClient returns a client authenticated by the OAuth token.
+func (p *ClientProvider) GetOAuthClient(oauthToken string) *Client {
+	if oauthToken == "" {
+		return p.getClient(nil)
+	}
+	return p.getClient(&auth.OAuthBearerToken{Token: oauthToken})
+}
+
+// GetClient returns an unauthenticated client.
+func (p *ClientProvider) GetClient() *Client {
+	// TODO: Maybe inline.
+	return p.getClient(nil)
+}
+
+// TODO: Move inline if only place used is above.
+func (p *ClientProvider) getClient(a auth.Authenticator) *Client {
+	p.clientsMu.Lock()
+	defer p.clientsMu.Unlock()
+
+	key := "<nil>"
+	if a != nil {
+		key = a.Hash()
+	}
+	if c, ok := p.clients[key]; ok {
+		return c
+	}
+
+	c := NewClient(a)
+	p.clients[key] = c
+	return c
+}
+
+func NewClientProvider(urn string, baseURL *url.URL, cli httpcli.Doer) *ClientProvider {
+	if cli == nil {
+		cli = httpcli.ExternalDoer
+	}
+
+	return &ClientProvider{
+		urn: urn,
+		// TODO: What do we do here?
+		// baseURL:    baseURL.ResolveReference(&url.URL{Path: path.Join(baseURL.Path, "api/v4") + "/"}),
+		httpClient: cli,
+		clients:    make(map[string]*Client),
+	}
+
 }
 
 // do performs the specified request, returning any errors and a continuationToken used for pagination (if the API supports it).

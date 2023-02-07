@@ -19,6 +19,7 @@ func LoginHandler(config *oauth2.Config, failure http.Handler) http.Handler {
 	return oauth2Login.LoginHandler(config, failure)
 }
 
+// TODO: Drop failure from the args list and simplify the check in gitLabHandler.
 func CallbackHandler(config *oauth2.Config, success, failure http.Handler) http.Handler {
 	success = gitlabHandler(config, success, failure)
 	return oauth2Login.CallbackHandler(config, success, failure)
@@ -27,6 +28,7 @@ func CallbackHandler(config *oauth2.Config, success, failure http.Handler) http.
 func gitlabHandler(config *oauth2.Config, success, failure http.Handler) http.Handler {
 	logger := log.Scoped("GitlabOAuthHandler", "Gitlab OAuth Handler")
 
+	// TODO: Possibly simplify this from above.
 	if failure == nil {
 		failure = gologin.DefaultFailureHandler
 	}
