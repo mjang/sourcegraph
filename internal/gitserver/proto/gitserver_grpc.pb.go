@@ -8,7 +8,6 @@ package proto
 
 import (
 	context "context"
-
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -24,6 +23,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type GitserverServiceClient interface {
 	Exec(ctx context.Context, in *ExecRequest, opts ...grpc.CallOption) (GitserverService_ExecClient, error)
+	RepoCloneProgress(ctx context.Context, in *RepoCloneProgressRequest, opts ...grpc.CallOption) (*RepoCloneProgressResponse, error)
 }
 
 type gitserverServiceClient struct {
@@ -66,11 +66,21 @@ func (x *gitserverServiceExecClient) Recv() (*ExecResponse, error) {
 	return m, nil
 }
 
+func (c *gitserverServiceClient) RepoCloneProgress(ctx context.Context, in *RepoCloneProgressRequest, opts ...grpc.CallOption) (*RepoCloneProgressResponse, error) {
+	out := new(RepoCloneProgressResponse)
+	err := c.cc.Invoke(ctx, "/gitserver.GitserverService/RepoCloneProgress", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // GitserverServiceServer is the server API for GitserverService service.
 // All implementations must embed UnimplementedGitserverServiceServer
 // for forward compatibility
 type GitserverServiceServer interface {
 	Exec(*ExecRequest, GitserverService_ExecServer) error
+	RepoCloneProgress(context.Context, *RepoCloneProgressRequest) (*RepoCloneProgressResponse, error)
 	mustEmbedUnimplementedGitserverServiceServer()
 }
 
@@ -80,6 +90,9 @@ type UnimplementedGitserverServiceServer struct {
 
 func (UnimplementedGitserverServiceServer) Exec(*ExecRequest, GitserverService_ExecServer) error {
 	return status.Errorf(codes.Unimplemented, "method Exec not implemented")
+}
+func (UnimplementedGitserverServiceServer) RepoCloneProgress(context.Context, *RepoCloneProgressRequest) (*RepoCloneProgressResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RepoCloneProgress not implemented")
 }
 func (UnimplementedGitserverServiceServer) mustEmbedUnimplementedGitserverServiceServer() {}
 
@@ -115,13 +128,36 @@ func (x *gitserverServiceExecServer) Send(m *ExecResponse) error {
 	return x.ServerStream.SendMsg(m)
 }
 
+func _GitserverService_RepoCloneProgress_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RepoCloneProgressRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GitserverServiceServer).RepoCloneProgress(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/gitserver.GitserverService/RepoCloneProgress",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GitserverServiceServer).RepoCloneProgress(ctx, req.(*RepoCloneProgressRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // GitserverService_ServiceDesc is the grpc.ServiceDesc for GitserverService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var GitserverService_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "gitserver.GitserverService",
 	HandlerType: (*GitserverServiceServer)(nil),
-	Methods:     []grpc.MethodDesc{},
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "RepoCloneProgress",
+			Handler:    _GitserverService_RepoCloneProgress_Handler,
+		},
+	},
 	Streams: []grpc.StreamDesc{
 		{
 			StreamName:    "Exec",

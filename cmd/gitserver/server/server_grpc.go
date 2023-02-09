@@ -1,20 +1,25 @@
 package server
 
 import (
+	"context"
+
 	"github.com/sourcegraph/log"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
 	"github.com/sourcegraph/sourcegraph/internal/api"
 	"github.com/sourcegraph/sourcegraph/internal/gitserver/proto"
 	"github.com/sourcegraph/sourcegraph/internal/gitserver/protocol"
 	"github.com/sourcegraph/sourcegraph/internal/grpc/streamio"
 	"github.com/sourcegraph/sourcegraph/lib/errors"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 type GRPCServer struct {
 	Server *Server
 	proto.UnimplementedGitserverServiceServer
 }
+
+var _ proto.GitserverServiceServer = &GRPCServer{}
 
 func (gs *GRPCServer) Exec(req *proto.ExecRequest, ss proto.GitserverService_ExecServer) error {
 	internalReq := protocol.ExecRequest{
@@ -66,4 +71,18 @@ func (gs *GRPCServer) Exec(req *proto.ExecRequest, ss proto.GitserverService_Exe
 	}
 
 	return nil
+}
+
+func (gs *GRPCServer) RepoCloneProgress(ctx context.Context, req *proto.RepoCloneProgressRequest) (*proto.RepoCloneProgressResponse, error) {
+	repo := api.RepoName(req.GetRepoName())
+	dir := gs.Server.dir(repo)
+	resp := proto.RepoCloneProgressResponse{
+		Cloned: repoCloned(dir),
+	}
+	resp.CloneProgress, resp.CloneInProgress = gs.Server.locker.Status(dir)
+	if isAlwaysCloningTest(repo) {
+		resp.CloneInProgress = true
+		resp.CloneProgress = "This will never finish cloning"
+	}
+	return &resp, nil
 }
