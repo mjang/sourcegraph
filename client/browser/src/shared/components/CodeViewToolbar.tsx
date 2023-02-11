@@ -3,12 +3,9 @@ import * as React from 'react'
 import classNames from 'classnames'
 import * as H from 'history'
 
-import { ContributableMenu } from '@sourcegraph/client-api'
 import { ErrorLike, isErrorLike } from '@sourcegraph/common'
 import { isHTTPAuthError } from '@sourcegraph/http-client'
-import { ActionNavItemsClassProps, ActionsNavItems } from '@sourcegraph/shared/src/actions/ActionsNavItems'
-import { ContributionScope } from '@sourcegraph/shared/src/api/extension/api/context/context'
-import { ExtensionsControllerProps } from '@sourcegraph/shared/src/extensions/controller'
+import { ActionNavItemsClassProps } from '@sourcegraph/shared/src/actions/ActionsNavItems'
 import { PlatformContextProps } from '@sourcegraph/shared/src/platform/context'
 import { TelemetryProps } from '@sourcegraph/shared/src/telemetry/telemetryService'
 
@@ -31,16 +28,10 @@ export interface CodeViewToolbarClassProps extends ActionNavItemsClassProps {
      * Class name for the `<ul>` element wrapping all toolbar items
      */
     className?: string
-
-    /**
-     * The scope of this toolbar (e.g., the view component that it is associated with).
-     */
-    scope?: ContributionScope
 }
 
 export interface CodeViewToolbarProps
     extends PlatformContextProps<'settings' | 'requestGraphQL'>,
-        ExtensionsControllerProps,
         TelemetryProps,
         CodeViewToolbarClassProps {
     sourcegraphURL: string
@@ -61,18 +52,6 @@ export interface CodeViewToolbarProps
 
 export const CodeViewToolbar: React.FunctionComponent<React.PropsWithChildren<CodeViewToolbarProps>> = props => (
     <ul className={classNames(styles.codeViewToolbar, props.className)} data-testid="code-view-toolbar">
-        {!props.hideActions && props.extensionsController !== null && (
-            <ActionsNavItems
-                {...props}
-                listItemClass={classNames(styles.item, props.buttonProps?.listItemClass ?? props.listItemClass)}
-                actionItemClass={classNames(props.buttonProps?.actionItemClass ?? props.actionItemClass)}
-                menu={ContributableMenu.EditorTitle}
-                extensionsController={props.extensionsController}
-                platformContext={props.platformContext}
-                location={props.location}
-                scope={props.scope}
-            />
-        )}{' '}
         {isErrorLike(props.fileInfoOrError) ? (
             isHTTPAuthError(props.fileInfoOrError) ? (
                 <SignInButton

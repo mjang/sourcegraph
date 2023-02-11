@@ -27,6 +27,7 @@ const codeIntelFragments = gql`
             name
         }
         commit {
+            id
             oid
         }
     }
@@ -208,6 +209,7 @@ export const CODE_INTEL_SEARCH_QUERY = gql`
                             url
                             path
                             commit {
+                                id
                                 oid
                             }
                             content
@@ -253,6 +255,7 @@ export const LOCAL_CODE_INTEL_QUERY = gql`
         repository(name: $repository) {
             id
             commit(rev: $commit) {
+                id
                 blob(path: $path) {
                     localCodeIntel
                 }

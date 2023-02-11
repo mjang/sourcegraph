@@ -1,5 +1,5 @@
-import { combineLatest, ReplaySubject, of } from 'rxjs'
-import { map, switchMap } from 'rxjs/operators'
+import { combineLatest, ReplaySubject } from 'rxjs'
+import { map } from 'rxjs/operators'
 
 import { asError } from '@sourcegraph/common'
 import { isHTTPAuthError } from '@sourcegraph/http-client'
@@ -8,13 +8,9 @@ import { mutateSettings, updateSettings } from '@sourcegraph/shared/src/settings
 import { EMPTY_SETTINGS_CASCADE, gqlToCascade, SettingsSubject } from '@sourcegraph/shared/src/settings/settings'
 import { toPrettyBlobURL } from '@sourcegraph/shared/src/util/url'
 
-import { background } from '../../browser-extension/web-extension-api/runtime'
 import { createGraphQLHelpers } from '../backend/requestGraphQl'
 import { CodeHost } from '../code-hosts/shared/codeHost'
-import { isInPage } from '../context'
 
-import { createExtensionHost } from './extensionHost'
-import { getInlineExtensions, shouldUseInlineExtensions } from './inlineExtensionsService'
 import { editClientSettings, fetchViewerSettings, mergeCascades, storageSettingsCascade } from './settings'
 
 export interface SourcegraphIntegrationURLs {
@@ -22,15 +18,6 @@ export interface SourcegraphIntegrationURLs {
      * The URL of the configured Sourcegraph instance. Used for extensions, find-references, ...
      */
     sourcegraphURL: string
-
-    /**
-     * The base URL where assets will be fetched from (CSS, extension host
-     * worker bundle, ...)
-     *
-     * This is the sourcegraph URL in most cases, but may be different for
-     * native code hosts that self-host the integration bundle.
-     */
-    assetsURL: string
 }
 
 /**
@@ -48,7 +35,7 @@ export interface BrowserPlatformContext extends PlatformContext {
  */
 export function createPlatformContext(
     { urlToFile }: Pick<CodeHost, 'urlToFile'>,
-    { sourcegraphURL, assetsURL }: SourcegraphIntegrationURLs,
+    { sourcegraphURL }: SourcegraphIntegrationURLs,
     isExtension: boolean
 ): BrowserPlatformContext {
     const updatedViewerSettings = new ReplaySubject<{
@@ -56,8 +43,6 @@ export function createPlatformContext(
         subjects: SettingsSubject[]
     }>(1)
     const { requestGraphQL, getBrowserGraphQLClient } = createGraphQLHelpers(sourcegraphURL, isExtension)
-
-    const shouldUseInlineExtensionsObservable = shouldUseInlineExtensions(requestGraphQL)
 
     const context: BrowserPlatformContext = {
         /**
@@ -119,32 +104,6 @@ export function createPlatformContext(
         },
         requestGraphQL,
         getGraphQLClient: getBrowserGraphQLClient,
-        createExtensionHost: () => createExtensionHost({ assetsURL }),
-        getScriptURLForExtension: () => {
-            if (isInPage) {
-                return undefined
-            }
-
-            return bundleURLs =>
-                shouldUseInlineExtensionsObservable.toPromise().then(shouldUseInlineExtensions => {
-                    if (shouldUseInlineExtensions) {
-                        // inline extensions have fixed scriptURLs
-                        return bundleURLs
-                    }
-
-                    // We need to import the extension's JavaScript file (in importScripts in the Web Worker) from a blob:
-                    // URI, not its original http:/https: URL, because Chrome extensions are not allowed to be published
-                    // with a CSP that allowlists https://* in script-src (see
-                    // https://developer.chrome.com/extensions/contentSecurityPolicy#relaxing-remote-script). (Firefox
-                    // add-ons have an even stricter restriction.)
-                    return Promise.allSettled(bundleURLs.map(bundleURL => background.createBlobURL(bundleURL))).then(
-                        results =>
-                            results.map(result =>
-                                result.status === 'rejected' ? asError(result.reason) : result.value
-                            )
-                    )
-                })
-        },
         urlToFile: ({ rawRepoName, ...target }, context) => {
             // We don't always resolve the rawRepoName, e.g. if there are multiple definitions.
             // Construct URL to file on code host, if possible.
@@ -155,11 +114,6 @@ export function createPlatformContext(
             return `${sourcegraphURL}${toPrettyBlobURL(target)}`
         },
         sourcegraphURL,
-        clientApplication: 'other',
-        getStaticExtensions: () =>
-            shouldUseInlineExtensionsObservable.pipe(
-                switchMap(shouldUseInline => (shouldUseInline ? getInlineExtensions() : of(undefined)))
-            ),
     }
     return context
 }

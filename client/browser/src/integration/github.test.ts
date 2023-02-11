@@ -102,11 +102,6 @@ describe('GitHub', () => {
                     siteAdmin: false,
                 },
             }),
-            EnableLegacyExtensions: () => ({
-                site: {
-                    enableLegacyExtensions: true,
-                },
-            }),
         })
 
         // Ensure that the same assets are requested in all environments.

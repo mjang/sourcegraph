@@ -14,12 +14,10 @@ import { ResolveRepoNameResult, ResolveRepoNameVariables } from '../../../graphq
 import { isInPage } from '../../context'
 import { CodeHost } from '../shared/codeHost'
 import { CodeView } from '../shared/codeViews'
-import { createNotificationClassNameGetter } from '../shared/getNotificationClassName'
 import { getSelectionsFromHash, observeSelectionsFromHash } from '../shared/util/selections'
 import { queryWithSelector, ViewResolver } from '../shared/views'
 
 import { diffDOMFunctions, singleFileDOMFunctions } from './domFunctions'
-import { getCommandPaletteMount } from './extensions'
 import { resolveCommitFileInfo, resolveDiffFileInfo, resolveFileInfo } from './fileInfo'
 import {
     getPageInfo,
@@ -202,7 +200,6 @@ export const gitlabCodeHost = subtypeOf<CodeHost>()({
     name: 'GitLab',
     check: checkIsGitlab,
     codeViewResolvers: [codeViewResolver],
-    getCommandPaletteMount,
     getContext: async () => {
         const { repoName, ...pageInfo } = getPageInfo()
         return {
@@ -253,28 +250,16 @@ export const gitlabCodeHost = subtypeOf<CodeHost>()({
         return url.href
     },
     notificationClassNames,
-    commandPaletteClassProps: {
-        popoverClassName: classNames('dropdown-menu', styles.commandListPopover),
-        formClassName: 'dropdown-input',
-        inputClassName: 'dropdown-input-field',
-        resultsContainerClassName: 'dropdown-content',
-        selectedActionItemClassName: 'is-focused',
-        noResultsClassName: 'px-3',
-        iconClassName: 's16 align-bottom',
-    },
     codeViewToolbarClassProps: {
         className: 'pl-0',
         actionItemClass: 'btn btn-md gl-button btn-icon',
-        actionItemPressedClass: 'active',
         actionItemIconClass: 'gl-button-icon gl-icon s16',
     },
     hoverOverlayClassProps: {
         className: classNames('card', styles.hoverOverlay),
         actionItemClassName: 'btn btn-secondary',
-        actionItemPressedClassName: 'active',
         closeButtonClassName: 'btn btn-transparent p-0 btn-icon--gitlab',
         iconClassName: 'square s16',
-        getAlertClassName: createNotificationClassNameGetter(notificationClassNames),
     },
     codeViewsRequireTokenization: true,
     getHoverOverlayMountLocation: (): string | null => {

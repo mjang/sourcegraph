@@ -27,13 +27,11 @@ import { getPlatformName } from '../../util/context'
 import { querySelectorAllOrSelf, querySelectorOrSelf } from '../../util/dom'
 import { CodeHost, MountGetter } from '../shared/codeHost'
 import { CodeView, toCodeViewResolver } from '../shared/codeViews'
-import { createNotificationClassNameGetter } from '../shared/getNotificationClassName'
 import { NativeTooltip } from '../shared/nativeTooltips'
 import { getSelectionsFromHash, observeSelectionsFromHash } from '../shared/util/selections'
 import { ViewResolver } from '../shared/views'
 
 import { diffDomFunctions, searchCodeSnippetDOMFunctions, singleFileDOMFunctions } from './domFunctions'
-import { getCommandPaletteMount } from './extensions'
 import { resolveDiffFileInfo, resolveFileInfo, resolveSnippetFileInfo } from './fileInfo'
 import { getFileContainers, parseURL, getFilePath, getSelectorFor } from './util'
 
@@ -728,38 +726,18 @@ export const githubCodeHost: GithubCodeHost = {
         iconClassName,
     },
     check: checkIsGitHub,
-    getCommandPaletteMount,
     notificationClassNames,
-    commandPaletteClassProps: {
-        buttonClassName: 'Header-link d-flex flex-items-baseline',
-        popoverClassName: classNames('Box', styles.commandPalettePopover),
-        formClassName: 'p-1',
-        inputClassName: 'form-control input-sm header-search-input jump-to-field-active',
-        listClassName: 'p-0 m-0 js-navigation-container jump-to-suggestions-results-container',
-        selectedListItemClassName: 'navigation-focus',
-        listItemClassName:
-            'd-flex flex-justify-start flex-items-center p-0 f5 navigation-item js-navigation-item js-jump-to-scoped-search',
-        actionItemClassName: classNames(
-            styles.commandPaletteActionItem,
-            'no-underline d-flex flex-auto flex-items-center jump-to-suggestions-path p-2'
-        ),
-        noResultsClassName: 'd-flex flex-auto flex-items-center jump-to-suggestions-path p-2',
-        iconClassName,
-    },
     codeViewToolbarClassProps: {
         className: styles.codeViewToolbar,
         listItemClass: classNames(styles.codeViewToolbarItem, 'BtnGroup'),
         actionItemClass: classNames('btn btn-sm tooltipped tooltipped-s BtnGroup-item', styles.actionItem),
-        actionItemPressedClass: 'selected',
         actionItemIconClass: classNames(styles.icon, 'v-align-text-bottom'),
     },
     hoverOverlayClassProps: {
         className: 'Box',
         actionItemClassName: 'btn btn-sm btn-secondary',
-        actionItemPressedClassName: 'active',
         closeButtonClassName: 'btn-octicon p-0 hover-overlay__close-button--github',
         badgeClassName: classNames('label', styles.hoverOverlayBadge),
-        getAlertClassName: createNotificationClassNameGetter(notificationClassNames, 'flash-full'),
         iconClassName,
     },
     urlToFile: (sourcegraphURL, target, context) => {

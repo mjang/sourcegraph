@@ -5,7 +5,6 @@ import { mdiApplicationEditOutline } from '@mdi/js'
 import { from } from 'rxjs'
 
 import { logger } from '@sourcegraph/common'
-import { SimpleActionItem } from '@sourcegraph/shared/src/actions/SimpleActionItem'
 import { PlatformContext } from '@sourcegraph/shared/src/platform/context'
 import { isSettingsValid, Settings } from '@sourcegraph/shared/src/settings/settings'
 import {
@@ -35,7 +34,7 @@ export interface OpenInEditorActionItemProps {
     platformContext: PlatformContext
     externalServiceType?: string
     assetsRoot?: string
-    source?: 'repoHeader' | 'actionItemsBar'
+    source?: 'repoHeader'
     actionType?: 'nav' | 'dropdown'
 }
 
@@ -186,18 +185,10 @@ interface EditorItemProps {
     onClick: () => void
     icon: React.ReactNode
     isActive?: boolean
-    source?: 'repoHeader' | 'actionItemsBar'
+    source?: 'repoHeader'
     actionType?: 'nav' | 'dropdown'
 }
 function EditorItem(props: EditorItemProps): JSX.Element {
-    if (props.source === 'actionItemsBar') {
-        return (
-            <SimpleActionItem tooltip={props.tooltip} onSelect={props.onClick} isActive={props.isActive}>
-                {props.icon}
-            </SimpleActionItem>
-        )
-    }
-
     if (props.actionType === 'dropdown') {
         return (
             <RepoHeaderActionMenuLink file={true} as={Button} onClick={props.onClick}>

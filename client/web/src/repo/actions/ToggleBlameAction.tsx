@@ -2,7 +2,6 @@ import { useCallback } from 'react'
 
 import { mdiAccountDetails, mdiAccountDetailsOutline } from '@mdi/js'
 
-import { SimpleActionItem } from '@sourcegraph/shared/src/actions/SimpleActionItem'
 import { RenderMode } from '@sourcegraph/shared/src/util/url'
 import { Button, Icon, Tooltip } from '@sourcegraph/wildcard'
 
@@ -11,7 +10,7 @@ import { useBlameVisibility } from '../blame/useBlameVisibility'
 import { RepoHeaderActionAnchor, RepoHeaderActionMenuLink } from '../components/RepoHeaderActions'
 
 interface Props {
-    source?: 'repoHeader' | 'actionItemsBar'
+    source?: 'repoHeader'
     actionType?: 'nav' | 'dropdown'
     renderMode?: RenderMode
 }
@@ -37,14 +36,6 @@ export const ToggleBlameAction: React.FC<Props> = props => {
     const icon = (
         <Icon aria-hidden={true} svgPath={isBlameVisible && !disabled ? mdiAccountDetails : mdiAccountDetailsOutline} />
     )
-
-    if (props.source === 'actionItemsBar') {
-        return (
-            <SimpleActionItem tooltip={descriptiveText} isActive={isBlameVisible} onSelect={toggleBlameState}>
-                {icon}
-            </SimpleActionItem>
-        )
-    }
 
     if (props.actionType === 'dropdown') {
         return (

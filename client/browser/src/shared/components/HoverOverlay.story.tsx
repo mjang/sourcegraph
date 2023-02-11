@@ -5,11 +5,9 @@ import { BrowserRouter } from 'react-router-dom'
 import { CompatRouter } from 'react-router-dom-v5-compat'
 
 import { registerHighlightContributions } from '@sourcegraph/common'
-import { NotificationType } from '@sourcegraph/shared/src/api/extension/extensionHostApi'
 import { HoverOverlay, HoverOverlayClassProps } from '@sourcegraph/shared/src/hover/HoverOverlay'
 import {
     commonProps,
-    FIXTURE_ACTIONS,
     FIXTURE_CONTENT,
     FIXTURE_SEMANTIC_BADGE,
 } from '@sourcegraph/shared/src/hover/HoverOverlay.fixtures'
@@ -46,14 +44,6 @@ const BITBUCKET_CLASS_PROPS: HoverOverlayClassProps = {
     className: 'aui-dialog',
     actionItemClassName: classNames('aui-button', bitbucketCodeHostStyles.hoverActionItem),
     iconClassName: 'aui-icon',
-    getAlertClassName: alertKind => {
-        switch (alertKind) {
-            case NotificationType.Error:
-                return 'aui-message aui-message-error'
-            default:
-                return 'aui-message aui-message-info'
-        }
-    },
 }
 
 export const BitbucketStyles: Story = (props = {}) => (
@@ -67,7 +57,6 @@ export const BitbucketStyles: Story = (props = {}) => (
                     contents: [FIXTURE_CONTENT],
                     aggregatedBadges: [FIXTURE_SEMANTIC_BADGE],
                 }}
-                actionsOrError={FIXTURE_ACTIONS}
             />
         </CompatRouter>
     </BrowserRouter>

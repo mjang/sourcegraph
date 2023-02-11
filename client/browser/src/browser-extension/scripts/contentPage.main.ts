@@ -15,7 +15,7 @@ import {
     signalBrowserExtensionInstalled,
 } from '../../shared/code-hosts/sourcegraph/inject'
 import { initSentry } from '../../shared/sentry'
-import { DEFAULT_SOURCEGRAPH_URL, getAssetsURL, observeSourcegraphURL } from '../../shared/util/context'
+import { observeSourcegraphURL } from '../../shared/util/context'
 import { featureFlags } from '../../shared/util/featureFlags'
 import { assertEnvironment } from '../environmentAssertion'
 
@@ -92,7 +92,7 @@ async function main(): Promise<void> {
 
     let previousSubscription: Subscription
     subscriptions.add(
-        // eslint-disable-next-line rxjs/no-async-subscribe, @typescript-eslint/no-misused-promises
+        // eslint-disable-next-line rxjs/no-async-subscribe
         observeSourcegraphURL(IS_EXTENSION).subscribe(async sourcegraphURL => {
             if (previousSubscription) {
                 console.log('Sourcegraph detached code navigation')
@@ -107,7 +107,7 @@ async function main(): Promise<void> {
 
             try {
                 previousSubscription = await injectCodeIntelligence(
-                    { sourcegraphURL, assetsURL: getAssetsURL(DEFAULT_SOURCEGRAPH_URL) },
+                    { sourcegraphURL },
                     IS_EXTENSION,
                     async function onCodeHostFound() {
                         const styleSheets = [

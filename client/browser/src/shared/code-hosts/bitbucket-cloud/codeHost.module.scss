@@ -21,10 +21,6 @@
     width: 1rem;
 }
 
-.pressed {
-    @extend .action-item-active-base;
-}
-
 .open-on-sourcegraph {
     height: 2rem;
     border-radius: 3px;

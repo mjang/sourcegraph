@@ -4,7 +4,7 @@ import { map } from 'rxjs/operators'
 
 import { HoverMerged } from '@sourcegraph/client-api'
 import { MarkupKind } from '@sourcegraph/extension-api-classes'
-import { ActionItemAction } from '@sourcegraph/shared/src/actions/ActionItem'
+import { HoverAction } from '@sourcegraph/shared/src/actions/ActionItem'
 import { hasFindImplementationsSupport } from '@sourcegraph/shared/src/codeintel/api'
 import { Occurrence } from '@sourcegraph/shared/src/codeintel/scip'
 import { BlobViewState, toPrettyBlobURL } from '@sourcegraph/shared/src/util/url'
@@ -87,26 +87,20 @@ export class CodeIntelTooltip implements Tooltip {
             viewState: 'references',
         })
         const noDefinitionFound = definition.locations.length === 0
-        const actions: ActionItemAction[] = [
+        const actions: HoverAction[] = [
             {
-                active: true,
-                disabledWhen: noDefinitionFound || definition.atTheDefinition,
-                action: {
-                    id: 'invokeFunction',
-                    title: 'Go to definition',
-                    disabledTitle: noDefinitionFound ? 'No definition found' : 'You are at the definition',
-                    command: definition.url ? 'open' : 'invokeFunction-new',
-                    commandArguments: [definition.url ? definition.url : () => definition.asyncHandler()],
-                },
+                title: noDefinitionFound
+                    ? 'No definition found'
+                    : definition.atTheDefinition
+                    ? 'At definition'
+                    : 'Go to definition',
+                url: definition.url,
+                onClick: definition.url ? undefined : () => definition.asyncHandler(),
+                disabled: noDefinitionFound || definition.atTheDefinition,
             },
             {
-                active: true,
-                action: {
-                    id: 'findReferences',
-                    title: 'Find references',
-                    command: 'open',
-                    commandArguments: [referencesURL],
-                },
+                title: 'Find references',
+                url: referencesURL,
             },
         ]
         if (
@@ -119,23 +113,13 @@ export class CodeIntelTooltip implements Tooltip {
                 viewState: `implementations_${blobInfo.mode}` as BlobViewState,
             })
             actions.push({
-                active: true,
-                action: {
-                    id: 'findImplementations',
-                    title: 'Find implementations',
-                    command: 'open',
-                    commandArguments: [implementationsURL],
-                },
+                title: 'Find implementations',
+                url: implementationsURL,
             })
         }
         actions.push({
-            active: true,
-            action: {
-                id: 'goToDefinition',
-                title: '?', // special marker for the MDI "Help" icon.
-                description: `Go to definition with ${modifierClickDescription}, long-click, or by pressing Enter with the keyboard. Display this popover by pressing Space with the keyboard.`,
-                command: '',
-            },
+            title: '?', // special marker for the MDI "Help" icon.
+            tooltip: `Go to definition with ${modifierClickDescription}, long-click, or by pressing Enter with the keyboard. Display this popover by pressing Space with the keyboard.`,
         })
         return {
             actionsOrError: actions,

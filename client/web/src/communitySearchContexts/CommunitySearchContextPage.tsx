@@ -8,7 +8,6 @@ import { catchError, startWith } from 'rxjs/operators'
 import { SyntaxHighlightedSearchQuery } from '@sourcegraph/branded'
 import { asError, isErrorLike } from '@sourcegraph/common'
 import { displayRepoName } from '@sourcegraph/shared/src/components/RepoLink'
-import { ExtensionsControllerProps } from '@sourcegraph/shared/src/extensions/controller'
 import { PlatformContextProps } from '@sourcegraph/shared/src/platform/context'
 import { QueryState, SearchContextInputProps, SearchContextProps } from '@sourcegraph/shared/src/search'
 import { SettingsCascadeProps, Settings } from '@sourcegraph/shared/src/settings/settings'
@@ -34,7 +33,6 @@ export interface CommunitySearchContextPageProps
         ThemeProps,
         ThemePreferenceProps,
         TelemetryProps,
-        ExtensionsControllerProps<'executeCommand'>,
         PlatformContextProps<'settings' | 'sourcegraphURL' | 'requestGraphQL'>,
         SearchContextInputProps,
         Pick<SearchContextProps, 'fetchSearchContextBySpec'> {

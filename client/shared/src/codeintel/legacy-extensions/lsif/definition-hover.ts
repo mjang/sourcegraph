@@ -44,6 +44,7 @@ const definitionAndHoverQuery = gql`
                                         name
                                     }
                                     commit {
+                                        id
                                         oid
                                     }
                                 }

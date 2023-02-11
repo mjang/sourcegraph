@@ -43,6 +43,7 @@ const referencesQuery = gql`
                                         name
                                     }
                                     commit {
+                                        id
                                         oid
                                     }
                                 }

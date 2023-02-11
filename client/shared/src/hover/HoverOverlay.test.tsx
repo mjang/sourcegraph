@@ -10,13 +10,11 @@ import { NOOP_TELEMETRY_SERVICE } from '../telemetry/telemetryService'
 import { HoverOverlay, HoverOverlayProps } from './HoverOverlay'
 
 describe('HoverOverlay', () => {
-    const NOOP_EXTENSIONS_CONTROLLER = { executeCommand: () => Promise.resolve() }
     const NOOP_PLATFORM_CONTEXT = { settings: NEVER }
     const history = H.createMemoryHistory({ keyLength: 0 })
     const commonProps = subtypeOf<HoverOverlayProps>()({
         location: history.location,
         telemetryService: NOOP_TELEMETRY_SERVICE,
-        extensionsController: NOOP_EXTENSIONS_CONTROLLER,
         platformContext: NOOP_PLATFORM_CONTEXT,
         hoveredToken: { repoName: 'r', commitID: 'c', revision: 'v', filePath: 'f', line: 1, character: 2 },
         overlayPosition: { left: 0, top: 0 },
@@ -58,12 +56,7 @@ describe('HoverOverlay', () => {
 
     test('actions present', () => {
         expect(
-            render(
-                <HoverOverlay
-                    {...commonProps}
-                    actionsOrError={[{ action: { id: 'a', command: 'c', title: 'Some title' }, active: true }]}
-                />
-            ).asFragment()
+            render(<HoverOverlay {...commonProps} actionsOrError={[{ title: 'Some title' }]} />).asFragment()
         ).toMatchSnapshot()
     })
 
@@ -99,31 +92,8 @@ describe('HoverOverlay', () => {
             render(
                 <HoverOverlay
                     {...commonProps}
-                    actionsOrError={[{ action: { id: 'a', command: 'c' }, active: true }]}
+                    actionsOrError={[{ title: 'a' }]}
                     hoverOrError={{ contents: [{ kind: MarkupKind.Markdown, value: 'v' }] }}
-                />
-            ).asFragment()
-        ).toMatchSnapshot()
-    })
-
-    test('actions, hover and alert present', () => {
-        expect(
-            render(
-                <HoverOverlay
-                    {...commonProps}
-                    actionsOrError={[{ action: { id: 'a', command: 'c' }, active: true }]}
-                    hoverOrError={{
-                        contents: [{ kind: MarkupKind.Markdown, value: 'v' }],
-                        alerts: [
-                            {
-                                summary: {
-                                    kind: MarkupKind.Markdown,
-                                    value: 'Testing `markdown` rendering.',
-                                },
-                                type: 'test-alert-dismissalType',
-                            },
-                        ],
-                    }}
                 />
             ).asFragment()
         ).toMatchSnapshot()
@@ -132,11 +102,7 @@ describe('HoverOverlay', () => {
     test('actions present, hover loading', () => {
         expect(
             render(
-                <HoverOverlay
-                    {...commonProps}
-                    actionsOrError={[{ action: { id: 'a', command: 'c' }, active: true }]}
-                    hoverOrError="loading"
-                />
+                <HoverOverlay {...commonProps} actionsOrError={[{ title: 'a' }]} hoverOrError="loading" />
             ).asFragment()
         ).toMatchSnapshot()
     })
@@ -194,7 +160,7 @@ describe('HoverOverlay', () => {
             render(
                 <HoverOverlay
                     {...commonProps}
-                    actionsOrError={[{ action: { id: 'a', command: 'c' }, active: true }]}
+                    actionsOrError={[{ title: 'a' }]}
                     hoverOrError={{ message: 'm', name: 'c' }}
                 />
             ).asFragment()

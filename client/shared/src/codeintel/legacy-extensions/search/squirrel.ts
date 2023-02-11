@@ -77,7 +77,7 @@ export const mkSquirrel = (api: API): PromiseProviders => ({
 type RepoCommitPathRange = RepoCommitPath & { range: Range }
 
 const mkSourcegraphLocation = ({ repo, commit, path, range }: RepoCommitPathRange): sourcegraph.Location => ({
-    uri: new URL(`git://${repo}?${commit}#${path}`),
+    uri: `git://${repo}?${commit}#${path}`,
     range: range ? rangeToSourcegraphRange({ row: range.row, column: range.column, length: range.length }) : undefined,
 })
 

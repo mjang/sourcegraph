@@ -43,6 +43,7 @@ const implementationsQuery = gql`
                                         name
                                     }
                                     commit {
+                                        id
                                         oid
                                     }
                                 }

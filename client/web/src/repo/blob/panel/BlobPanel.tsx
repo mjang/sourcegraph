@@ -7,7 +7,6 @@ import { Panel, useBuiltinTabbedPanelViews } from '@sourcegraph/branded/src/comp
 import { PanelContent } from '@sourcegraph/branded/src/components/panel/views/PanelContent'
 import { isDefined, isErrorLike } from '@sourcegraph/common'
 import { FetchFileParameters } from '@sourcegraph/shared/src/backend/file'
-import { ExtensionsControllerProps } from '@sourcegraph/shared/src/extensions/controller'
 import { Scalars } from '@sourcegraph/shared/src/graphql-operations'
 import { PlatformContextProps } from '@sourcegraph/shared/src/platform/context'
 import { Settings, SettingsCascadeOrError, SettingsCascadeProps } from '@sourcegraph/shared/src/settings/settings'
@@ -23,7 +22,6 @@ interface Props
     extends AbsoluteRepoFile,
         ModeSpec,
         SettingsCascadeProps,
-        ExtensionsControllerProps,
         ThemeProps,
         PlatformContextProps,
         Pick<CodeIntelligenceProps, 'useCodeIntel'>,
@@ -41,7 +39,6 @@ export type BlobPanelTabID = 'info' | 'def' | 'references' | 'impl' | 'typedef' 
  * A React hook that registers panel views for the blob.
  */
 function useBlobPanelViews({
-    extensionsController,
     revision,
     filePath,
     repoID,
@@ -82,7 +79,6 @@ function useBlobPanelViews({
                                   settingsCascade={settingsCascade}
                                   platformContext={platformContext}
                                   isLightTheme={isLightTheme}
-                                  extensionsController={extensionsController}
                                   telemetryService={telemetryService}
                                   key="references"
                                   fetchHighlightedFileLineRanges={fetchHighlightedFileLineRanges}
@@ -115,7 +111,6 @@ function useBlobPanelViews({
             settingsCascade,
             platformContext,
             isLightTheme,
-            extensionsController,
             telemetryService,
             fetchHighlightedFileLineRanges,
             useCodeIntel,

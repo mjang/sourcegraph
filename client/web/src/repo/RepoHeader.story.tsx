@@ -25,10 +25,6 @@ const mockUser = {
     siteAdmin: true,
 } as AuthenticatedUser
 
-if (!window.context) {
-    window.context = { enableLegacyExtensions: false } as SourcegraphContext & Mocha.SuiteFunction
-}
-
 const decorator: DecoratorFn = story => (
     <BrandedStory initialEntries={['/github.com/sourcegraph/sourcegraph/-/tree/']} styles={webStyles}>
         {() => <div className="container mt-3">{story()}</div>}
@@ -160,7 +156,6 @@ const createProps = (path: string, forceWrap: boolean = false): React.ComponentP
     settingsCascade: EMPTY_SETTINGS_CASCADE,
     authenticatedUser: mockUser,
     platformContext: {} as any,
-    extensionsController: null,
     telemetryService: NOOP_TELEMETRY_SERVICE,
     forceWrap,
 })

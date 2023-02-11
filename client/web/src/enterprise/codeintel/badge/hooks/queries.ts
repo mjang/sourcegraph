@@ -20,6 +20,7 @@ export const lsifIndexFieldsFragment = gql`
                 name
             }
             commit {
+                id
                 url
                 oid
                 abbreviatedOID
@@ -115,6 +116,7 @@ export const lsifUploadFieldsFragment = gql`
                 name
             }
             commit {
+                id
                 url
                 oid
                 abbreviatedOID

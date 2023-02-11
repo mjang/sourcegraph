@@ -161,27 +161,6 @@ describe('codeHost', () => {
             expect(renderedOverlay).not.toBeUndefined()
         })
 
-        test('renders the command palette if codeHost.getCommandPaletteMount is defined', async () => {
-            const { extensionHostAPI } = await integrationTestContext()
-            const commandPaletteMount = createTestElement()
-            subscriptions.add(
-                await handleCodeHost({
-                    ...commonArguments(),
-                    codeHost: {
-                        type: 'github',
-                        name: 'GitHub',
-                        check: () => true,
-                        getCommandPaletteMount: () => commandPaletteMount,
-                        codeViewResolvers: [],
-                        notificationClassNames,
-                    },
-                    extensionsController: createMockController(extensionHostAPI),
-                })
-            )
-            const renderedCommandPalette = elementRenderedAtMount(commandPaletteMount)
-            expect(renderedCommandPalette).not.toBeUndefined()
-        })
-
         test('detects code views based on selectors', async () => {
             const { extensionHostAPI, extensionAPI } = await integrationTestContext(undefined, {
                 roots: [],

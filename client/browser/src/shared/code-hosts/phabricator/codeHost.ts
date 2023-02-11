@@ -10,7 +10,6 @@ import { FileSpec, RepoSpec, ResolvedRevisionSpec, RevisionSpec } from '@sourceg
 import { fetchBlobContentLines } from '../../repo/backend'
 import { CodeHost } from '../shared/codeHost'
 import { CodeView, toCodeViewResolver } from '../shared/codeViews'
-import { createNotificationClassNameGetter } from '../shared/getNotificationClassName'
 import { ViewResolver } from '../shared/views'
 
 import { diffDomFunctions, diffusionDOMFns } from './domFunctions'
@@ -207,7 +206,6 @@ export const phabricatorCodeHost: CodeHost = {
         actionItemClassName: classNames('button grey', styles.hoverOverlayActionItem),
         closeButtonClassName: 'button grey btn-icon--phabricator',
         iconClassName: styles.hoverOverlayActionItemIcon,
-        getAlertClassName: createNotificationClassNameGetter(notificationClassNames),
     },
     codeViewsRequireTokenization: true,
 }

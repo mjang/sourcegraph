@@ -62,7 +62,6 @@ export class TreeLayer extends React.Component<TreeLayerProps, TreeLayerState> {
             path: this.props.entryInfo ? this.props.entryInfo.path : '',
             url: this.props.entryInfo ? this.props.entryInfo.url : '',
         }
-
         this.state = {}
     }
 

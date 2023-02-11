@@ -5,9 +5,4 @@
     "rootDir": "src",
   },
   "include": ["src/**/*"],
-  "references": [
-    {
-      "path": "../extension-api",
-    },
-  ],
 }

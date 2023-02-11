@@ -68,7 +68,6 @@
         "eslint:browser",
         "eslint:precise-code-intel",
         "eslint:release",
-        "eslint:extension-api"
       ],
       "dependsOrder": "parallel",
       "problemMatcher": []
@@ -99,13 +98,6 @@
       "type": "npm",
       "script": "eslint",
       "path": "dev/release/",
-      "problemMatcher": ["$eslint-stylish"]
-    },
-    {
-      "label": "eslint:extension-api",
-      "type": "npm",
-      "script": "eslint",
-      "path": "client/extension-api/",
       "problemMatcher": ["$eslint-stylish"]
     }
   ]

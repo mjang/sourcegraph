@@ -10,7 +10,6 @@ import { catchError } from 'rxjs/operators'
 
 import { asError, ErrorLike, isErrorLike, logger } from '@sourcegraph/common'
 import { Position, Range } from '@sourcegraph/extension-api-types'
-import { SimpleActionItem } from '@sourcegraph/shared/src/actions/SimpleActionItem'
 import { HelixSwarmIcon, PhabricatorIcon } from '@sourcegraph/shared/src/components/icons' // TODO: Switch mdi icon
 import { FileSpec, RevisionSpec } from '@sourcegraph/shared/src/util/url'
 import { ButtonLinkProps, Icon, Link, Tooltip, useObservable } from '@sourcegraph/wildcard'
@@ -36,7 +35,7 @@ interface Props extends RevisionSpec, Partial<FileSpec> {
 
     actionType?: 'nav' | 'dropdown'
 
-    source?: 'repoHeader' | 'actionItemsBar'
+    source?: 'repoHeader'
 }
 
 /**
@@ -139,14 +138,6 @@ export const GoToCodeHostAction: React.FunctionComponent<
         onAuxClick: onClick,
         className: 'test-go-to-code-host',
         'aria-label': descriptiveText,
-    }
-
-    if (props.source === 'actionItemsBar') {
-        return (
-            <SimpleActionItem tooltip={descriptiveText} {...commonProps}>
-                <Icon as={exportIcon} aria-hidden={true} />
-            </SimpleActionItem>
-        )
     }
 
     // Don't show browser extension popover on small screens

@@ -392,6 +392,7 @@ function buildSearchQuery(fileLocal: boolean): string {
                         file {
                             path
                             commit {
+                                id
                                 oid
                             }
                         }
@@ -512,6 +513,7 @@ const localCodeIntelQuery = gql`
         repository(name: $repository) {
             id
             commit(rev: $commit) {
+                id
                 blob(path: $path) {
                     localCodeIntel
                 }

@@ -67,12 +67,7 @@ import {
 import { createUpdateableField } from '@sourcegraph/shared/src/components/CodeMirrorEditor'
 import { UIPositionSpec, UIRangeSpec } from '@sourcegraph/shared/src/util/url'
 
-import {
-    getClickToGoToDefinition,
-    getGoToURL,
-    WebHoverOverlay,
-    WebHoverOverlayProps,
-} from '../../../components/WebHoverOverlay'
+import { getClickToGoToDefinition, WebHoverOverlay, WebHoverOverlayProps } from '../../../components/WebHoverOverlay'
 import { type BlobProps, updateBrowserHistoryIfChanged } from '../CodeMirrorBlob'
 
 import { CodeMirrorContainer } from './react-interop'
@@ -629,13 +624,11 @@ export class HovercardView implements TooltipView {
                 >
                     <WebHoverOverlay
                         // Blob props
-                        location={props.location}
                         onHoverShown={props.onHoverShown}
                         isLightTheme={props.isLightTheme}
                         platformContext={props.platformContext}
                         settingsCascade={props.settingsCascade}
                         telemetryService={props.telemetryService}
-                        extensionsController={props.extensionsController}
                         // Hover props
                         actionsOrError={actionsOrError}
                         hoverOrError={hoverOrError}
@@ -644,7 +637,6 @@ export class HovercardView implements TooltipView {
                         // hovercard to render
                         overlayPosition={dummyOverlayPosition}
                         hoveredToken={hoveredToken}
-                        onAlertDismissed={() => repositionTooltips(this.view)}
                         pinOptions={{
                             showCloseButton: pinned,
                             onCloseButtonClick: () => {
@@ -654,7 +646,7 @@ export class HovercardView implements TooltipView {
                                 updateBrowserHistoryIfChanged(props.navigate, props.location, parameters)
                                 this.nextPinned.next(false)
                             },
-                            onCopyLinkButtonClick: async () => {
+                            onCopyLinkButtonClick: () => {
                                 if (!pinned) {
                                     // This needs to happen before updating the URL so that we avoid re-creating the hovercard
                                     this.view.dispatch({
@@ -679,7 +671,7 @@ export class HovercardView implements TooltipView {
                                         })
                                     )
                                 )
-                                await navigator.clipboard.writeText(window.location.href)
+                                navigator.clipboard.writeText(window.location.href).catch(() => {})
 
                                 this.nextPinned.next(true)
                             },
@@ -785,7 +777,7 @@ function tokenRangeToHovercard(
                             // Adaption of the "click to go to definition" code inside
                             // WebHoverOverlay
                             if (getClickToGoToDefinition(props.settingsCascade)) {
-                                const urlAndType = getGoToURL(actionsOrError, props.location)
+                                const urlAndType = { url: 'TODO(sqs)', actionType: 'asdf' } // TODO(sqs)
                                 if (urlAndType) {
                                     const { url, actionType } = urlAndType
                                     onClick = () => {

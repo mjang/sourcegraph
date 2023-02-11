@@ -1,6 +1,6 @@
 import minimatch from 'minimatch'
 
-import { Position } from '@sourcegraph/extension-api-types'
+import { DocumentFilter, DocumentSelector, Position, TextDocument } from '../../../codeintel/legacy-extensions/api'
 
 import type { DocumentFilter, DocumentSelector, TextDocument } from '../../../codeintel/legacy-extensions/api'
 
@@ -55,7 +55,7 @@ function match1(selector: DocumentSelector, document: Pick<TextDocument, 'uri' |
  * Taken from
  * https://github.com/Microsoft/vscode/blob/3d35801127f0a62d58d752bc613506e836c5d120/src/vs/editor/common/modes/languageSelector.ts#L24.
  */
-export function score(selector: DocumentSelector, candidateUri: URL, candidateLanguage: string): number {
+function score(selector: DocumentSelector, candidateUri: URL, candidateLanguage: string): number {
     // array -> take max individual value
     let returnValue = 0
     for (const filter of selector) {

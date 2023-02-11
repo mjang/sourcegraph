@@ -21,6 +21,7 @@ export const DefinitionFieldsFragment = gql`
                 name
             }
             commit {
+                id
                 oid
             }
         }

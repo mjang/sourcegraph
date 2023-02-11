@@ -18,7 +18,6 @@ import {
     reactManualTracer,
 } from '@sourcegraph/observability-client'
 import { FetchFileParameters } from '@sourcegraph/shared/src/backend/file'
-import { ExtensionsControllerProps } from '@sourcegraph/shared/src/extensions/controller'
 import { HighlightResponseFormat } from '@sourcegraph/shared/src/graphql-operations'
 import { PlatformContextProps } from '@sourcegraph/shared/src/platform/context'
 import { SearchContextProps } from '@sourcegraph/shared/src/search'
@@ -87,7 +86,6 @@ interface BlobPageProps
         SettingsCascadeProps,
         PlatformContextProps,
         TelemetryProps,
-        ExtensionsControllerProps,
         ThemeProps,
         HoverThresholdProps,
         BreadcrumbSetters,
@@ -363,37 +361,35 @@ export const BlobPage: FC<BlobPageProps> = ({ className, ...props }) => {
     const alwaysRender = (
         <>
             <PageTitle title={getPageTitle()} />
-            {!window.context.enableLegacyExtensions ? (
-                <>
-                    {window.context.isAuthenticatedUser && (
-                        <RepoHeaderContributionPortal
-                            position="right"
-                            priority={112}
-                            id="open-in-editor-action"
-                            repoHeaderContributionsLifecycleProps={props.repoHeaderContributionsLifecycleProps}
-                        >
-                            {({ actionType }) => (
-                                <OpenInEditorActionItem
-                                    platformContext={props.platformContext}
-                                    externalServiceType={props.repoServiceType}
-                                    actionType={actionType}
-                                    source="repoHeader"
-                                />
-                            )}
-                        </RepoHeaderContributionPortal>
+
+            {window.context.isAuthenticatedUser && (
+                <RepoHeaderContributionPortal
+                    position="right"
+                    priority={112}
+                    id="open-in-editor-action"
+                    repoHeaderContributionsLifecycleProps={props.repoHeaderContributionsLifecycleProps}
+                >
+                    {({ actionType }) => (
+                        <OpenInEditorActionItem
+                            platformContext={props.platformContext}
+                            externalServiceType={props.repoServiceType}
+                            actionType={actionType}
+                            source="repoHeader"
+                        />
                     )}
-                    <RepoHeaderContributionPortal
-                        position="right"
-                        priority={111}
-                        id="toggle-blame-action"
-                        repoHeaderContributionsLifecycleProps={props.repoHeaderContributionsLifecycleProps}
-                    >
-                        {({ actionType }) => (
-                            <ToggleBlameAction actionType={actionType} source="repoHeader" renderMode={renderMode} />
-                        )}
-                    </RepoHeaderContributionPortal>
-                </>
-            ) : null}
+                </RepoHeaderContributionPortal>
+            )}
+
+            <RepoHeaderContributionPortal
+                position="right"
+                priority={111}
+                id="toggle-blame-action"
+                repoHeaderContributionsLifecycleProps={props.repoHeaderContributionsLifecycleProps}
+            >
+                {({ actionType }) => (
+                    <ToggleBlameAction actionType={actionType} source="repoHeader" renderMode={renderMode} />
+                )}
+            </RepoHeaderContributionPortal>
 
             <RepoHeaderContributionPortal
                 position="right"
@@ -575,7 +571,6 @@ export const BlobPage: FC<BlobPageProps> = ({ className, ...props }) => {
                         blobInfo={{ ...blobInfoOrError, commitID, stencil }}
                         wrapCode={wrapCode}
                         platformContext={props.platformContext}
-                        extensionsController={props.extensionsController}
                         settingsCascade={props.settingsCascade}
                         onHoverShown={props.onHoverShown}
                         isLightTheme={isLightTheme}
