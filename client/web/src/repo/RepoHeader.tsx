@@ -7,21 +7,17 @@ import { useLocation } from 'react-router-dom-v5-compat'
 import { PlatformContextProps } from '@sourcegraph/shared/src/platform/context'
 import { SettingsCascadeOrError } from '@sourcegraph/shared/src/settings/settings'
 import { TelemetryProps } from '@sourcegraph/shared/src/telemetry/telemetryService'
-import { lazyComponent } from '@sourcegraph/shared/src/util/lazyComponent'
 import { Menu, MenuList, Position, Icon } from '@sourcegraph/wildcard'
 
 import { AuthenticatedUser } from '../auth'
 import { Breadcrumbs, BreadcrumbsProps } from '../components/Breadcrumbs'
 import { ErrorBoundary } from '../components/ErrorBoundary'
-import type { ActionItemsToggleProps } from '../extensions/components/ActionItemsBar'
 import { ActionButtonDescriptor } from '../util/contributions'
 import { useBreakpoint } from '../util/dom'
 
 import { RepoHeaderActionDropdownToggle } from './components/RepoHeaderActions'
 
 import styles from './RepoHeader.module.scss'
-
-const ActionItemsToggle = lazyComponent(() => import('../extensions/components/ActionItemsBar'), 'ActionItemsToggle')
 
 /**
  * Stores the list of RepoHeaderContributions, manages addition/deletion, and ensures they are sorted.
@@ -252,14 +248,6 @@ export const RepoHeader: React.FunctionComponent<React.PropsWithChildren<Props>>
                         </li>
                     </ul>
                 )}
-                {window.context.enableLegacyExtensions ? (
-                    <ul className="navbar-nav">
-                        <ActionItemsToggle
-                            useActionItemsToggle={props.useActionItemsToggle}
-                            extensionsController={props.extensionsController}
-                        />
-                    </ul>
-                ) : null}
             </ErrorBoundary>
         </nav>
     )

@@ -53,7 +53,6 @@ const allNavItemsProps: Partial<GlobalNavbarProps> = {
     batchChangesExecutionEnabled: true,
     batchChangesWebhookLogsEnabled: true,
     codeInsightsEnabled: true,
-    enableLegacyExtensions: true,
 }
 
 const allAuthenticatedNavItemsProps: Partial<GlobalNavbarProps> = {

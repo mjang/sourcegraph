@@ -45,16 +45,6 @@ const PROPS: React.ComponentProps<typeof GlobalNavbar> = {
 }
 
 describe('GlobalNavbar', () => {
-    const origContext = window.context
-    beforeEach(() => {
-        window.context = {
-            enableLegacyExtensions: false,
-        } as any
-    })
-    afterEach(() => {
-        window.context = origContext
-    })
-
     test('default', () => {
         const { asFragment } = renderWithBrandedContext(
             <MockedTestProvider>

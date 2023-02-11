@@ -25,7 +25,6 @@ export function createController(
         | 'requestGraphQL'
         | 'showMessage'
         | 'showInputBox'
-        | 'getScriptURLForExtension'
         | 'getStaticExtensions'
         | 'telemetryService'
         | 'clientApplication'

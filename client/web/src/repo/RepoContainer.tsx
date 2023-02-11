@@ -3,13 +3,12 @@ import React, { FC, Suspense, useEffect, useMemo, useState } from 'react'
 import { mdiSourceRepository } from '@mdi/js'
 import classNames from 'classnames'
 import { escapeRegExp } from 'lodash'
-import { matchPath } from 'react-router'
 import { Location, useLocation, Route, Routes } from 'react-router-dom-v5-compat'
 import { NEVER, of } from 'rxjs'
 import { catchError, switchMap } from 'rxjs/operators'
 
 import { StreamingSearchResultsListProps } from '@sourcegraph/branded'
-import { asError, encodeURIPathComponent, ErrorLike, isErrorLike, logger, repeatUntil } from '@sourcegraph/common'
+import { asError, ErrorLike, isErrorLike, logger, repeatUntil } from '@sourcegraph/common'
 import {
     isCloneInProgressErrorLike,
     isRepoSeeOtherErrorLike,
@@ -35,7 +34,6 @@ import { CodeIntelligenceProps } from '../codeintel'
 import { BreadcrumbSetters, BreadcrumbsProps } from '../components/Breadcrumbs'
 import { ErrorBoundary } from '../components/ErrorBoundary'
 import { HeroPage } from '../components/HeroPage'
-import { ActionItemsBarProps, useWebActionItems } from '../extensions/components/ActionItemsBar'
 import { ExternalLinkFields, RepositoryFields } from '../graphql-operations'
 import { CodeInsightsProps } from '../insights/types'
 import { NotebookProps } from '../notebooks'
@@ -47,7 +45,6 @@ import { parseBrowserRepoURL } from '../util/url'
 import { GoToCodeHostAction } from './actions/GoToCodeHostAction'
 import { fetchFileExternalLinks, ResolvedRevision, resolveRepoRevision } from './backend'
 import { RepoContainerError } from './RepoContainerError'
-import { compareSpecPath } from './repoContainerRoutes'
 import { RepoHeader, RepoHeaderActionButton, RepoHeaderContributionsLifecycleProps } from './RepoHeader'
 import { RepoHeaderContributionPortal } from './RepoHeaderContributionPortal'
 import {
@@ -55,7 +52,7 @@ import {
     RepoRevisionContainerContext,
     RepoRevisionContainerRoute,
 } from './RepoRevisionContainer'
-import { commitsPath, repoSplat } from './repoRevisionContainerRoutes'
+import { repoSplat } from './repoRevisionContainerRoutes'
 import { RepoSettingsAreaRoute } from './settings/RepoSettingsArea'
 import { RepoSettingsSideBarGroup } from './settings/RepoSettingsSidebar'
 import { repoSettingsAreaPath } from './settings/routes'
@@ -77,7 +74,6 @@ export interface RepoContainerContext
         TelemetryProps,
         Pick<SearchContextProps, 'selectedSearchContextSpec' | 'searchContextsEnabled'>,
         BreadcrumbSetters,
-        ActionItemsBarProps,
         SearchStreamingProps,
         Pick<StreamingSearchResultsListProps, 'fetchHighlightedFileLineRanges'>,
         CodeIntelligenceProps,
@@ -277,25 +273,6 @@ export const RepoContainer: FC<RepoContainerProps> = props => {
         })
     }, [revision, filePath, repoName, onNavbarQueryChange, globbing])
 
-    const { useActionItemsBar, useActionItemsToggle } = useWebActionItems()
-
-    const repoMatchURL = '/' + encodeURIPathComponent(repoName)
-
-    // render go to the code host action on all the repo container routes and on all compare spec routes
-    const isGoToCodeHostActionVisible = useMemo(() => {
-        if (!window.context.enableLegacyExtensions) {
-            return true
-        }
-        const paths = [
-            ...repoContainerRoutes.map(route => route.path),
-            compareSpecPath,
-            repoSettingsAreaPath,
-            commitsPath,
-        ]
-
-        return paths.some(path => matchPath(location.pathname, { path: repoMatchURL + path }))
-    }, [repoContainerRoutes, repoMatchURL, location.pathname])
-
     const isError = isErrorLike(repoOrError) || isErrorLike(resolvedRevisionOrError)
 
     // if revision for given repo does not resolve then we still proceed to render settings routes
@@ -333,7 +310,6 @@ export const RepoContainer: FC<RepoContainerProps> = props => {
         repoName,
         revision: revision || '',
         resolvedRevision,
-        useActionItemsBar,
     }
 
     const perforceCodeHostUrlToSwarmUrlMap =
@@ -353,7 +329,6 @@ export const RepoContainer: FC<RepoContainerProps> = props => {
         <div className={classNames('w-100 d-flex flex-column', styles.repoContainer)}>
             <RepoHeader
                 actionButtons={props.repoHeaderActionButtons}
-                useActionItemsToggle={useActionItemsToggle}
                 breadcrumbs={props.breadcrumbs}
                 repoName={repoName}
                 revision={revision}
@@ -361,36 +336,33 @@ export const RepoContainer: FC<RepoContainerProps> = props => {
                 settingsCascade={props.settingsCascade}
                 authenticatedUser={authenticatedUser}
                 platformContext={props.platformContext}
-                extensionsController={extensionsController}
                 telemetryService={props.telemetryService}
             />
-            {isGoToCodeHostActionVisible && (
-                <RepoHeaderContributionPortal
-                    position="right"
-                    priority={2}
-                    id="go-to-code-host"
-                    {...repoHeaderContributionsLifecycleProps}
-                >
-                    {({ actionType }) => (
-                        <GoToCodeHostAction
-                            repo={repo}
-                            repoName={repoName}
-                            // We need a revision to generate code host URLs, if revision isn't available, we use the default branch or HEAD.
-                            revision={rawRevision || repo?.defaultBranch?.displayName || 'HEAD'}
-                            filePath={filePath}
-                            commitRange={commitRange}
-                            range={range}
-                            position={position}
-                            perforceCodeHostUrlToSwarmUrlMap={perforceCodeHostUrlToSwarmUrlMap}
-                            fetchFileExternalLinks={fetchFileExternalLinks}
-                            actionType={actionType}
-                            source="repoHeader"
-                            key="go-to-code-host"
-                            externalLinks={externalLinks}
-                        />
-                    )}
-                </RepoHeaderContributionPortal>
-            )}
+            <RepoHeaderContributionPortal
+                position="right"
+                priority={2}
+                id="go-to-code-host"
+                {...repoHeaderContributionsLifecycleProps}
+            >
+                {({ actionType }) => (
+                    <GoToCodeHostAction
+                        repo={repo}
+                        repoName={repoName}
+                        // We need a revision to generate code host URLs, if revision isn't available, we use the default branch or HEAD.
+                        revision={rawRevision || repo?.defaultBranch?.displayName || 'HEAD'}
+                        filePath={filePath}
+                        commitRange={commitRange}
+                        range={range}
+                        position={position}
+                        perforceCodeHostUrlToSwarmUrlMap={perforceCodeHostUrlToSwarmUrlMap}
+                        fetchFileExternalLinks={fetchFileExternalLinks}
+                        actionType={actionType}
+                        source="repoHeader"
+                        key="go-to-code-host"
+                        externalLinks={externalLinks}
+                    />
+                )}
+            </RepoHeaderContributionPortal>
 
             {isCodeIntelRepositoryBadgeVisible && (
                 <RepoHeaderContributionPortal

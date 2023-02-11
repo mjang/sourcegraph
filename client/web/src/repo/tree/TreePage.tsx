@@ -36,7 +36,6 @@ import { RepoBatchChangesButton } from '../../batches/RepoBatchChangesButton'
 import { CodeIntelligenceProps } from '../../codeintel'
 import { BreadcrumbSetters } from '../../components/Breadcrumbs'
 import { PageTitle } from '../../components/PageTitle'
-import { ActionItemsBarProps } from '../../extensions/components/ActionItemsBar'
 import { RepositoryFields } from '../../graphql-operations'
 import { basename } from '../../util/path'
 import { FilePathBreadcrumbs } from '../FilePathBreadcrumbs'
@@ -62,7 +61,6 @@ interface Props
     commitID: string
     revision: string
     globbing: boolean
-    useActionItemsBar: ActionItemsBarProps['useActionItemsBar']
     isSourcegraphDotCom: boolean
     className?: string
 }
@@ -87,7 +85,6 @@ export const TreePage: React.FunctionComponent<React.PropsWithChildren<Props>> =
     useBreadcrumb,
     codeIntelligenceEnabled,
     batchChangesEnabled,
-    useActionItemsBar,
     isSourcegraphDotCom,
     className,
     ...props
