@@ -964,6 +964,7 @@ importers:
       '@material-ui/core': 4.12.4_7ir5hbqdbfw4we5ecpxz77f25m
       '@material-ui/icons': 4.11.3_5glfapqkhejqpattrqvw65m2la
       '@material-ui/lab': 4.0.0-alpha.57_5glfapqkhejqpattrqvw65m2la
+      '@testing-library/react': 12.1.5_biqbaboplfbrettd7655fr4n2y
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
       react-router-dom: 6.7.0_biqbaboplfbrettd7655fr4n2y
@@ -974,7 +975,6 @@ importers:
       '@backstage/dev-utils': 1.0.11_asenqjccrkesmsfwbq3lggkll4
       '@backstage/test-utils': 1.2.4_e442r2zblqvic2logccjohmmdi
       '@testing-library/jest-dom': 5.16.4
-      '@testing-library/react': 12.1.5_biqbaboplfbrettd7655fr4n2y
       '@testing-library/user-event': 14.4.3_tlwynutqiyp5mns3woioasuxnq
       '@types/node': 18.8.3
       cross-fetch: 3.1.5
@@ -9762,7 +9762,6 @@ packages:
       '@types/react-dom': 17.0.18
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
-    dev: true
 
   /@testing-library/react/13.4.0_ef5jwxihqo6n7gxfmzogljlgcm:
     resolution: {integrity: sha512-sXOGON+WNTh3MLE9rve97ftaZukN3oNf2KjDy7YTx6hcTO2uuLHuCGynMDhFwGw/jYf4OJ2Qk0i4i79qMNNkyw==}
@@ -10441,7 +10440,6 @@ packages:
     resolution: {integrity: sha512-rLVtIfbwyur2iFKykP2w0pl/1unw26b5td16d5xMgp7/yjTHomkyxPYChFoCr/FtEX1lN9wY6lFj1qvKdS5kDw==}
     dependencies:
       '@types/react': 17.0.43
-    dev: true
 
   /@types/react-dom/18.0.2:
     resolution: {integrity: sha512-UxeS+Wtj5bvLRREz9tIgsK4ntCuLDo0EcAcACgw3E+9wE8ePDr9uQpq53MfcyxyIS55xJ+0B6mDS8c4qkkHLBg==}
