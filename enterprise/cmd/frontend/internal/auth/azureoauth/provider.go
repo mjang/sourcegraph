@@ -68,6 +68,7 @@ func parseConfig(logger log.Logger, cfg conftypes.SiteConfigQuerier, db database
 		}
 
 		provider, providerProblems := parseProvider(logger, pr.AzureDevOps, db, pr)
+		// TODO: Return provider / problems.
 	}
 
 	return []Provider{}, conf.Problems{}
@@ -75,6 +76,7 @@ func parseConfig(logger log.Logger, cfg conftypes.SiteConfigQuerier, db database
 
 func parseProvider(logger log.Logger, p *schema.AzureDevOpsAuthProvider, db database.DB, sourceCfg schema.AuthProviders) (provider *oauth.Provider, messages []string) {
 	// TODO: Handle empty p.Url. Or do I need to? I have a default?
+	// app url is vscode
 	parsedURL, err := url.Parse(p.Url)
 	if err != nil {
 		messages = append(messages, fmt.Sprintf("Failed to parse Azure DevOps URL %q. Login via this Azure instance will not work.", p.Url))
@@ -142,6 +144,7 @@ func azureDevOpsHandler(logger log.Logger, config *oauth2.Config, success, failu
 			return
 		}
 
+		// TODO: Finish implementation
 		azureClient, err := azureDevOpsClientFromAuthURL(config.Endpoint.AuthURL, token.AccessToken)
 		if err != nil {
 			ctx = gologin.WithError(ctx, errors.Errorf("could not parse AuthURL %s", config.Endpoint.AuthURL))
@@ -149,8 +152,10 @@ func azureDevOpsHandler(logger log.Logger, config *oauth2.Config, success, failu
 			return
 		}
 		user, err := azureClient.GetUser(ctx, "")
+		// TODO: Implement this.
 		err = validateResponse(user, err)
 		if err != nil {
+			// TODO: Copy pasta
 			// TODO: Prefer a more general purpose fix, potentially
 			// https://github.com/sourcegraph/sourcegraph/pull/20000
 			logger.Warn("invalid response", log.Error(err))
@@ -166,6 +171,7 @@ func azureDevOpsHandler(logger log.Logger, config *oauth2.Config, success, failu
 	return http.HandlerFunc(fn)
 }
 
+// TODO: Implement this.
 func azureDevOpsClientFromAuthURL(authURL, oauthToken string) (*gitlab.Client, error) {
 	baseURL, err := url.Parse(authURL)
 	if err != nil {
@@ -174,6 +180,7 @@ func azureDevOpsClientFromAuthURL(authURL, oauthToken string) (*gitlab.Client, e
 	baseURL.Path = ""
 	baseURL.RawQuery = ""
 	baseURL.Fragment = ""
+
 	// TODO: What urn do we need?
 	return azuredevops.NewClientProvider("", baseURL, nil).GetOAuthClient(oauthToken), nil
 }

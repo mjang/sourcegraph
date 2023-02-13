@@ -44,25 +44,16 @@ type Client struct {
 // NewClient returns an authenticated AzureDevOps API client with
 // the provided configuration. If a nil httpClient is provided, http.DefaultClient
 // will be used.
-func NewClient(urn string, config *schema.AzureDevOpsConnection, httpClient httpcli.Doer) (*Client, error) {
-	u, err := url.Parse(config.Url)
-	if err != nil {
-		return nil, err
-	}
-
+func NewClient(urn string, httpClient httpcli.Doer) (*Client, error) {
 	if httpClient == nil {
 		httpClient = httpcli.ExternalDoer
 	}
 
 	return &Client{
 		httpClient: httpClient,
-		Config:     config,
-		URL:        u,
-		rateLimit:  ratelimit.DefaultRegistry.Get(urn),
-		auth: &auth.BasicAuth{
-			Username: config.Username,
-			Password: config.Token,
-		},
+		// Config:     config,
+		URL:       u,
+		rateLimit: ratelimit.DefaultRegistry.Get(urn),
 	}, nil
 }
 
@@ -111,9 +102,45 @@ func (p *ClientProvider) getClient(a auth.Authenticator) *Client {
 		return c
 	}
 
-	c := NewClient(a)
+	c, err := NewClient(a)
+	if err != nil {
+		// TODO: Do not panic.
+		panic(err)
+	}
+
 	p.clients[key] = c
 	return c
+}
+
+func (p *ClientProvider) NewClient(a auth.Authenticator) *Client {
+	// Cache for GitLab project metadata.
+	// var cacheTTL time.Duration
+	// if isGitLabDotComURL(p.baseURL) && a == nil {
+	// 	cacheTTL = 10 * time.Minute // cache for longer when unauthenticated
+	// } else {
+	// 	cacheTTL = 30 * time.Second
+	// }
+	// key := "gl_proj:"
+	// var tokenHash string
+	// if a != nil {
+	// 	tokenHash = a.Hash()
+	// 	key += tokenHash
+	// }e
+	// projCache := rcache.NewWithTTL(key, int(cacheTTL/time.Second))
+
+	// rl := ratelimit.DefaultRegistry.Get(p.urn)
+	// rlm := ratelimit.DefaultMonitorRegistry.GetOrSet(p.baseURL.String(), tokenHash, "rest", &ratelimit.Monitor{})
+
+	return &Client{
+		httpClient: httpcli.ExternalDoer,
+		// Config:     config,
+		URL:       u,
+		rateLimit: ratelimit.DefaultRegistry.Get(urn),
+		auth:      a,
+		// 	Username: config.Username,
+		// 	Password: config.Token,
+		// },
+	}
 }
 
 func NewClientProvider(urn string, baseURL *url.URL, cli httpcli.Doer) *ClientProvider {
@@ -128,7 +155,6 @@ func NewClientProvider(urn string, baseURL *url.URL, cli httpcli.Doer) *ClientPr
 		httpClient: cli,
 		clients:    make(map[string]*Client),
 	}
-
 }
 
 // do performs the specified request, returning any errors and a continuationToken used for pagination (if the API supports it).

@@ -49,7 +49,7 @@ func NewAzureDevOpsSource(ctx context.Context, logger log.Logger, svc *types.Ext
 		return nil, err
 	}
 
-	cli, err := azuredevops.NewClient(svc.URN(), &c, httpCli)
+	cli, err := azuredevops.NewClient(svc.URN(), httpCli)
 	if err != nil {
 		return nil, err
 	}
