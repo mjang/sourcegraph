@@ -13,6 +13,7 @@ require (
 	github.com/NYTimes/gziphandler v1.1.1
 	github.com/PuerkitoBio/rehttp v1.1.0
 	github.com/RoaringBitmap/roaring v1.2.3
+	github.com/XSAM/otelsql v0.18.0
 	github.com/agext/levenshtein v1.2.3
 	github.com/amit7itz/goset v1.0.1
 	github.com/aws/aws-sdk-go-v2 v1.13.0
@@ -187,8 +188,6 @@ require (
 	sigs.k8s.io/yaml v1.3.0
 )
 
-require github.com/XSAM/otelsql v0.15.0
-
 require (
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
 	github.com/bahlo/generic-list-go v0.2.0 // indirect
@@ -218,7 +217,7 @@ require (
 	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8 // indirect
 	github.com/xrash/smetrics v0.0.0-20201216005158-039620a65673 // indirect
 	github.com/zenazn/goji v1.0.1 // indirect
-	go.opentelemetry.io/otel/metric v0.34.0 // indirect
+	go.opentelemetry.io/otel/metric v0.35.0 // indirect
 	go.uber.org/goleak v1.2.0 // indirect
 )
 
@@ -450,8 +449,8 @@ require (
 	go.mongodb.org/mongo-driver v1.10.2 // indirect
 	go.opencensus.io v0.24.0 // indirect
 	go.opentelemetry.io/collector/pdata v0.56.0 // indirect
-	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.37.0
-	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.36.4
+	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.38.0
+	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.38.0
 	go.opentelemetry.io/otel/exporters/otlp/internal/retry v1.13.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.13.0
 	go.opentelemetry.io/proto/otlp v0.19.0
@@ -497,8 +496,6 @@ replace (
 // These entries indicate temporary replace directives due to a pending pull request upstream
 // or issues with specific versions.
 replace (
-	// Forked until PR is merged upstream TODO @jhchabran
-	github.com/XSAM/otelsql => github.com/sourcegraph/otelsql v0.0.0-20220905085252-74375c884fff
 	// Pending: https://github.com/crewjam/saml/pull/450
 	github.com/crewjam/saml => github.com/sourcegraph/saml v0.0.0-20220728002234-ab6b53f6f94d
 	// Pending: https://github.com/ghodss/yaml/pull/65
