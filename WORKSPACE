@@ -104,9 +104,9 @@ load("@npm//:repositories.bzl", "npm_repositories")
 
 npm_repositories()
 
-load("@aspect_rules_ts//ts:repositories.bzl", "rules_ts_dependencies", LATEST_TS_VERSION = "LATEST_VERSION")
+load("@aspect_rules_ts//ts:repositories.bzl", "rules_ts_dependencies")
 
-rules_ts_dependencies(ts_version = LATEST_TS_VERSION)
+rules_ts_dependencies(ts_version = "4.9.3")
 
 # rules_jest setup ==============================
 load("@aspect_rules_jest//jest:dependencies.bzl", "rules_jest_dependencies")
