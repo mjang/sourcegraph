@@ -120,7 +120,7 @@ type AuthProviders struct {
 	Gitlab         *GitLabAuthProvider
 	Bitbucketcloud *BitbucketCloudAuthProvider
 	Gerrit         *GerritAuthProvider
-	AzureDevOps    *AzureDevOpsAuthProvider
+	Gerrit2        *GerritAuthProvider2
 }
 
 func (v AuthProviders) MarshalJSON() ([]byte, error) {
@@ -148,8 +148,8 @@ func (v AuthProviders) MarshalJSON() ([]byte, error) {
 	if v.Gerrit != nil {
 		return json.Marshal(v.Gerrit)
 	}
-	if v.AzureDevOps != nil {
-		return json.Marshal(v.AzureDevOps)
+	if v.Gerrit2 != nil {
+		return json.Marshal(v.Gerrit2)
 	}
 	return nil, errors.New("tagged union type must have exactly 1 non-nil field value")
 }
@@ -161,14 +161,14 @@ func (v *AuthProviders) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	switch d.DiscriminantProperty {
-	case "azureDevOps":
-		return json.Unmarshal(data, &v.AzureDevOps)
 	case "bitbucketcloud":
 		return json.Unmarshal(data, &v.Bitbucketcloud)
 	case "builtin":
 		return json.Unmarshal(data, &v.Builtin)
 	case "gerrit":
 		return json.Unmarshal(data, &v.Gerrit)
+	case "gerrit2":
+		return json.Unmarshal(data, &v.Gerrit2)
 	case "github":
 		return json.Unmarshal(data, &v.Github)
 	case "gitlab":
@@ -180,7 +180,7 @@ func (v *AuthProviders) UnmarshalJSON(data []byte) error {
 	case "saml":
 		return json.Unmarshal(data, &v.Saml)
 	}
-	return fmt.Errorf("tagged union type must have a %q property whose value is one of %s", "type", []string{"builtin", "saml", "openidconnect", "http-header", "github", "gitlab", "bitbucketcloud", "gerrit", "azureDevOps"})
+	return fmt.Errorf("tagged union type must have a %q property whose value is one of %s", "type", []string{"builtin", "saml", "openidconnect", "http-header", "github", "gitlab", "bitbucketcloud", "gerrit", "gerrit2"})
 }
 
 // AzureDevOpsAuthProvider description: Azure auth provider
@@ -899,6 +899,13 @@ type FusionClient struct {
 
 // GerritAuthProvider description: Gerrit auth provider
 type GerritAuthProvider struct {
+	Type string `json:"type"`
+	// Url description: URL of the Gerrit instance, such as https://gerrit-review.googlesource.com or https://gerrit.example.com.
+	Url string `json:"url"`
+}
+
+// GerritAuthProvider2 description: Gerrit auth provider
+type GerritAuthProvider2 struct {
 	Type string `json:"type"`
 	// Url description: URL of the Gerrit instance, such as https://gerrit-review.googlesource.com or https://gerrit.example.com.
 	Url string `json:"url"`

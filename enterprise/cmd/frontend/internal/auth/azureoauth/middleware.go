@@ -12,7 +12,7 @@ import (
 
 func init() {
 	oauth.AddIsOAuth(func(p schema.AuthProviders) bool {
-		return p.AzureDevOps != nil
+		return p.Azuredevops != nil
 	})
 }
 

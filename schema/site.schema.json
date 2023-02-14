@@ -1601,7 +1601,18 @@
         "properties": {
           "type": {
             "type": "string",
-            "enum": ["builtin", "saml", "openidconnect", "http-header", "github", "gitlab", "bitbucketcloud", "gerrit"]
+            "enum": [
+              "builtin",
+              "saml",
+              "openidconnect",
+              "http-header",
+              "azuredevops",
+              "github",
+              "gitlab",
+              "bitbucketcloud",
+              "gerrit",
+              "gerrit2"
+            ]
           }
         },
         "oneOf": [
@@ -1609,11 +1620,12 @@
           { "$ref": "#/definitions/SAMLAuthProvider" },
           { "$ref": "#/definitions/OpenIDConnectAuthProvider" },
           { "$ref": "#/definitions/HTTPHeaderAuthProvider" },
+          { "$ref": "#/definitions/AzureDevOpsAuthProvider" },
           { "$ref": "#/definitions/GitHubAuthProvider" },
           { "$ref": "#/definitions/GitLabAuthProvider" },
           { "$ref": "#/definitions/BitbucketCloudAuthProvider" },
           { "$ref": "#/definitions/GerritAuthProvider" },
-          { "$ref": "#/definitions/AzureDevOpsAuthProvider" }
+          { "$ref": "#/definitions/GerritAuthProvider2" }
         ],
         "!go": {
           "taggedUnionType": true
@@ -2205,6 +2217,23 @@
         }
       }
     },
+    "GerritAuthProvider2": {
+      "description": "Gerrit auth provider",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "url"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "gerrit2"
+        },
+        "url": {
+          "type": "string",
+          "description": "URL of the Gerrit instance, such as https://gerrit-review.googlesource.com or https://gerrit.example.com.",
+          "default": "https://gerrit-review.googlesource.com/"
+        }
+      }
+    },
     "AzureDevOpsAuthProvider": {
       "description": "Azure auth provider",
       "type": "object",
@@ -2213,7 +2242,7 @@
       "properties": {
         "type": {
           "type": "string",
-          "const": "azureDevOps"
+          "const": "azuredevops"
         },
         "url": {
           "type": "string",

@@ -21,7 +21,6 @@ import (
 	"github.com/sourcegraph/sourcegraph/internal/database"
 	"github.com/sourcegraph/sourcegraph/internal/extsvc"
 	"github.com/sourcegraph/sourcegraph/internal/extsvc/azuredevops"
-	"github.com/sourcegraph/sourcegraph/internal/extsvc/gitlab"
 	"github.com/sourcegraph/sourcegraph/schema"
 )
 
@@ -63,11 +62,11 @@ type Provider struct {
 
 func parseConfig(logger log.Logger, cfg conftypes.SiteConfigQuerier, db database.DB) (ps []Provider, problems conf.Problems) {
 	for _, pr := range cfg.SiteConfig().AuthProviders {
-		if pr.AzureDevOps == nil {
+		if pr.Azuredevops == nil {
 			continue
 		}
 
-		provider, providerProblems := parseProvider(logger, pr.AzureDevOps, db, pr)
+		provider, providerProblems := parseProvider(logger, pr.Azuredevops, db, pr)
 		problems = append(problems, conf.NewSiteProblems(providerProblems...)...)
 
 		if provider == nil {
@@ -75,7 +74,7 @@ func parseConfig(logger log.Logger, cfg conftypes.SiteConfigQuerier, db database
 		}
 
 		ps = append(ps, Provider{
-			AzureDevOpsAuthProvider: pr.AzureDevOps,
+			AzureDevOpsAuthProvider: pr.Azuredevops,
 			Provider:                provider,
 		})
 	}
@@ -154,34 +153,37 @@ func azureDevOpsHandler(logger log.Logger, config *oauth2.Config, success, failu
 		}
 
 		// TODO: Finish implementation
-		azureClient, err := azureDevOpsClientFromAuthURL(config.Endpoint.AuthURL, token.AccessToken)
+		_, err = azureDevOpsClientFromAuthURL(config.Endpoint.AuthURL, token.AccessToken)
 		if err != nil {
 			ctx = gologin.WithError(ctx, errors.Errorf("could not parse AuthURL %s", config.Endpoint.AuthURL))
 			failure.ServeHTTP(w, req.WithContext(ctx))
 			return
 		}
-		user, err := azureClient.GetUser(ctx, "")
-		// TODO: Implement this.
-		err = validateResponse(user, err)
-		if err != nil {
-			// TODO: Copy pasta
-			// TODO: Prefer a more general purpose fix, potentially
-			// https://github.com/sourcegraph/sourcegraph/pull/20000
-			logger.Warn("invalid response", log.Error(err))
-		}
+
+		// TODO: PRobably don't need this
+		// user, err := azureClient.GetUser(ctx, "")
+
+		// FIXME: Implement this.
+		// err = validateResponse(user, err)
+		// if err != nil {
+		// 	// TODO: Copy pasta
+		// 	// TODO: Prefer a more general purpose fix, potentially
+		// 	// https://github.com/sourcegraph/sourcegraph/pull/20000
+		// 	logger.Warn("invalid response", log.Error(err))
+		// }
 		if err != nil {
 			ctx = gologin.WithError(ctx, err)
 			failure.ServeHTTP(w, req.WithContext(ctx))
 			return
 		}
-		ctx = withUser(ctx, user)
+		// ctx = withUser(ctx, user)
 		success.ServeHTTP(w, req.WithContext(ctx))
 	}
 	return http.HandlerFunc(fn)
 }
 
 // TODO: Implement this.
-func azureDevOpsClientFromAuthURL(authURL, oauthToken string) (*gitlab.Client, error) {
+func azureDevOpsClientFromAuthURL(authURL, oauthToken string) (*azuredevops.Client, error) {
 	baseURL, err := url.Parse(authURL)
 	if err != nil {
 		return nil, err
@@ -191,9 +193,9 @@ func azureDevOpsClientFromAuthURL(authURL, oauthToken string) (*gitlab.Client, e
 	baseURL.Fragment = ""
 
 	// TODO: What urn do we need? Or do we even need it?
-	return azuredevops.NewClientProvider(urnAzureDevOpsOAuth, baseURL, nil).GetOAuthClient(oauthToken), nil
+	return azuredevops.NewClientProvider(urnAzuredevopsOAuth, baseURL, nil).GetOAuthClient(oauthToken), nil
 }
 
 const authPrefix = auth.AuthURLPrefix + "/azuredevops"
 const sessionKey = "azuredevopsoauth@0"
-const urnAzureDevOpsOAuth = "AzureDevOpsOAuth"
+const urnAzuredevopsOAuth = "AzuredevopsOAuth"

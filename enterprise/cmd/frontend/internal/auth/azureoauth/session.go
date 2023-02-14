@@ -54,7 +54,7 @@ func (s *sessionIssuerHelper) newOauth2Client() (*azuredevops.Client, error) {
 
 	// FIXME: Empty token
 	auth := auth.OAuthBearerToken{}
-	return azuredevops.NewClient(urnAzureDevOpsOAuth, s.CodeHost.BaseURL, &auth, httpCli)
+	return azuredevops.NewClient("azuredevopsoauth", s.CodeHost.BaseURL, &auth, httpCli)
 }
 
 type key int
