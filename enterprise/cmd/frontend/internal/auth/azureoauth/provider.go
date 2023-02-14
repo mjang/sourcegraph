@@ -68,10 +68,19 @@ func parseConfig(logger log.Logger, cfg conftypes.SiteConfigQuerier, db database
 		}
 
 		provider, providerProblems := parseProvider(logger, pr.AzureDevOps, db, pr)
-		// TODO: Return provider / problems.
+		problems = append(problems, conf.NewSiteProblems(providerProblems...)...)
+
+		if provider == nil {
+			continue
+		}
+
+		ps = append(ps, Provider{
+			AzureDevOpsAuthProvider: pr.AzureDevOps,
+			Provider:                provider,
+		})
 	}
 
-	return []Provider{}, conf.Problems{}
+	return ps, problems
 }
 
 func parseProvider(logger log.Logger, p *schema.AzureDevOpsAuthProvider, db database.DB, sourceCfg schema.AuthProviders) (provider *oauth.Provider, messages []string) {
@@ -181,8 +190,8 @@ func azureDevOpsClientFromAuthURL(authURL, oauthToken string) (*gitlab.Client, e
 	baseURL.RawQuery = ""
 	baseURL.Fragment = ""
 
-	// TODO: What urn do we need?
-	return azuredevops.NewClientProvider("", baseURL, nil).GetOAuthClient(oauthToken), nil
+	// TODO: What urn do we need? Or do we even need it?
+	return azuredevops.NewClientProvider(urnAzureDevOpsOAuth, baseURL, nil).GetOAuthClient(oauthToken), nil
 }
 
 const authPrefix = auth.AuthURLPrefix + "/azuredevops"

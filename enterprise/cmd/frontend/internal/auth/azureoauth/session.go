@@ -9,6 +9,7 @@ import (
 	"github.com/sourcegraph/sourcegraph/internal/actor"
 	"github.com/sourcegraph/sourcegraph/internal/database"
 	"github.com/sourcegraph/sourcegraph/internal/extsvc"
+	"github.com/sourcegraph/sourcegraph/internal/extsvc/auth"
 	"github.com/sourcegraph/sourcegraph/internal/extsvc/azuredevops"
 	"github.com/sourcegraph/sourcegraph/internal/httpcli"
 	"golang.org/x/oauth2"
@@ -51,7 +52,9 @@ func (s *sessionIssuerHelper) newOauth2Client() (*azuredevops.Client, error) {
 
 	// s.BaseURL
 
-	return azuredevops.NewClient(urnAzureDevOpsOAuth, x, httpCli)
+	// FIXME: Empty token
+	auth := auth.OAuthBearerToken{}
+	return azuredevops.NewClient(urnAzureDevOpsOAuth, s.CodeHost.BaseURL, &auth, httpCli)
 }
 
 type key int

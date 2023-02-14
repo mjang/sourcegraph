@@ -44,7 +44,7 @@ type Client struct {
 // NewClient returns an authenticated AzureDevOps API client with
 // the provided configuration. If a nil httpClient is provided, http.DefaultClient
 // will be used.
-func NewClient(urn string, httpClient httpcli.Doer) (*Client, error) {
+func NewClient(urn string, url *url.URL, auth auth.Authenticator, httpClient httpcli.Doer) (*Client, error) {
 	if httpClient == nil {
 		httpClient = httpcli.ExternalDoer
 	}
@@ -52,8 +52,9 @@ func NewClient(urn string, httpClient httpcli.Doer) (*Client, error) {
 	return &Client{
 		httpClient: httpClient,
 		// Config:     config,
-		URL:       u,
+		URL:       url,
 		rateLimit: ratelimit.DefaultRegistry.Get(urn),
+		auth:      auth,
 	}, nil
 }
 
@@ -65,7 +66,7 @@ type ClientProvider struct {
 	urn string
 
 	// baseURL is the base URL of GitLab; e.g., https://gitlab.com or https://gitlab.example.com
-	// TODO: Do I need thi?
+	// TODO: Do I need this?
 	baseURL *url.URL
 
 	// httpClient is the underlying the HTTP client to use.
@@ -86,62 +87,67 @@ func (p *ClientProvider) GetOAuthClient(oauthToken string) *Client {
 // GetClient returns an unauthenticated client.
 func (p *ClientProvider) GetClient() *Client {
 	// TODO: Maybe inline.
-	return p.getClient(nil)
+	// return p.getClient(nil)
+
+	// FIXME
+	return nil
 }
 
 // TODO: Move inline if only place used is above.
 func (p *ClientProvider) getClient(a auth.Authenticator) *Client {
-	p.clientsMu.Lock()
-	defer p.clientsMu.Unlock()
+	// FIXME
+	return nil
+	// p.clientsMu.Lock()
+	// defer p.clientsMu.Unlock()
 
-	key := "<nil>"
-	if a != nil {
-		key = a.Hash()
-	}
-	if c, ok := p.clients[key]; ok {
-		return c
-	}
-
-	c, err := NewClient(a)
-	if err != nil {
-		// TODO: Do not panic.
-		panic(err)
-	}
-
-	p.clients[key] = c
-	return c
-}
-
-func (p *ClientProvider) NewClient(a auth.Authenticator) *Client {
-	// Cache for GitLab project metadata.
-	// var cacheTTL time.Duration
-	// if isGitLabDotComURL(p.baseURL) && a == nil {
-	// 	cacheTTL = 10 * time.Minute // cache for longer when unauthenticated
-	// } else {
-	// 	cacheTTL = 30 * time.Second
-	// }
-	// key := "gl_proj:"
-	// var tokenHash string
+	// key := "<nil>"
 	// if a != nil {
-	// 	tokenHash = a.Hash()
-	// 	key += tokenHash
-	// }e
-	// projCache := rcache.NewWithTTL(key, int(cacheTTL/time.Second))
+	// 	key = a.Hash()
+	// }
+	// if c, ok := p.clients[key]; ok {
+	// 	return c
+	// }
 
-	// rl := ratelimit.DefaultRegistry.Get(p.urn)
-	// rlm := ratelimit.DefaultMonitorRegistry.GetOrSet(p.baseURL.String(), tokenHash, "rest", &ratelimit.Monitor{})
+	// c, err := NewClient("AzureDevOpsOAuth", a)
+	// if err != nil {
+	// 	// TODO: Do not panic.
+	// 	panic(err)
+	// }
 
-	return &Client{
-		httpClient: httpcli.ExternalDoer,
-		// Config:     config,
-		URL:       u,
-		rateLimit: ratelimit.DefaultRegistry.Get(urn),
-		auth:      a,
-		// 	Username: config.Username,
-		// 	Password: config.Token,
-		// },
-	}
+	// p.clients[key] = c
+	// return c
 }
+
+// func (p *ClientProvider) NewClient(a auth.Authenticator) *Client {
+// 	// Cache for GitLab project metadata.
+// 	// var cacheTTL time.Duration
+// 	// if isGitLabDotComURL(p.baseURL) && a == nil {
+// 	// 	cacheTTL = 10 * time.Minute // cache for longer when unauthenticated
+// 	// } else {
+// 	// 	cacheTTL = 30 * time.Second
+// 	// }
+// 	// key := "gl_proj:"
+// 	// var tokenHash string
+// 	// if a != nil {
+// 	// 	tokenHash = a.Hash()
+// 	// 	key += tokenHash
+// 	// }e
+// 	// projCache := rcache.NewWithTTL(key, int(cacheTTL/time.Second))
+
+// 	// rl := ratelimit.DefaultRegistry.Get(p.urn)
+// 	// rlm := ratelimit.DefaultMonitorRegistry.GetOrSet(p.baseURL.String(), tokenHash, "rest", &ratelimit.Monitor{})
+
+// 	return &Client{
+// 		httpClient: httpcli.ExternalDoer,
+// 		// Config:     config,
+// 		URL:       u,
+// 		rateLimit: ratelimit.DefaultRegistry.Get(urn),
+// 		auth:      a,
+// 		// 	Username: config.Username,
+// 		// 	Password: config.Token,
+// 		// },
+// 	}
+// }
 
 func NewClientProvider(urn string, baseURL *url.URL, cli httpcli.Doer) *ClientProvider {
 	if cli == nil {
