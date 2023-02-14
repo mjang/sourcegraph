@@ -112,29 +112,29 @@ type AuthProviderCommon struct {
 	DisplayName string `json:"displayName,omitempty"`
 }
 type AuthProviders struct {
+	AzureDevOps    *AzureDevOpsAuthProvider
+	Bitbucketcloud *BitbucketCloudAuthProvider
 	Builtin        *BuiltinAuthProvider
-	Saml           *SAMLAuthProvider
-	Openidconnect  *OpenIDConnectAuthProvider
-	HttpHeader     *HTTPHeaderAuthProvider
+	Gerrit         *GerritAuthProvider
 	Github         *GitHubAuthProvider
 	Gitlab         *GitLabAuthProvider
-	Bitbucketcloud *BitbucketCloudAuthProvider
-	Gerrit         *GerritAuthProvider
-	Gerrit2        *GerritAuthProvider2
+	HttpHeader     *HTTPHeaderAuthProvider
+	Openidconnect  *OpenIDConnectAuthProvider
+	Saml           *SAMLAuthProvider
 }
 
 func (v AuthProviders) MarshalJSON() ([]byte, error) {
+	if v.AzureDevOps != nil {
+		return json.Marshal(v.AzureDevOps)
+	}
+	if v.Bitbucketcloud != nil {
+		return json.Marshal(v.Bitbucketcloud)
+	}
 	if v.Builtin != nil {
 		return json.Marshal(v.Builtin)
 	}
-	if v.Saml != nil {
-		return json.Marshal(v.Saml)
-	}
-	if v.Openidconnect != nil {
-		return json.Marshal(v.Openidconnect)
-	}
-	if v.HttpHeader != nil {
-		return json.Marshal(v.HttpHeader)
+	if v.Gerrit != nil {
+		return json.Marshal(v.Gerrit)
 	}
 	if v.Github != nil {
 		return json.Marshal(v.Github)
@@ -142,14 +142,14 @@ func (v AuthProviders) MarshalJSON() ([]byte, error) {
 	if v.Gitlab != nil {
 		return json.Marshal(v.Gitlab)
 	}
-	if v.Bitbucketcloud != nil {
-		return json.Marshal(v.Bitbucketcloud)
+	if v.HttpHeader != nil {
+		return json.Marshal(v.HttpHeader)
 	}
-	if v.Gerrit != nil {
-		return json.Marshal(v.Gerrit)
+	if v.Openidconnect != nil {
+		return json.Marshal(v.Openidconnect)
 	}
-	if v.Gerrit2 != nil {
-		return json.Marshal(v.Gerrit2)
+	if v.Saml != nil {
+		return json.Marshal(v.Saml)
 	}
 	return nil, errors.New("tagged union type must have exactly 1 non-nil field value")
 }
@@ -161,14 +161,14 @@ func (v *AuthProviders) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	switch d.DiscriminantProperty {
+	case "azureDevOps":
+		return json.Unmarshal(data, &v.AzureDevOps)
 	case "bitbucketcloud":
 		return json.Unmarshal(data, &v.Bitbucketcloud)
 	case "builtin":
 		return json.Unmarshal(data, &v.Builtin)
 	case "gerrit":
 		return json.Unmarshal(data, &v.Gerrit)
-	case "gerrit2":
-		return json.Unmarshal(data, &v.Gerrit2)
 	case "github":
 		return json.Unmarshal(data, &v.Github)
 	case "gitlab":
@@ -180,7 +180,7 @@ func (v *AuthProviders) UnmarshalJSON(data []byte) error {
 	case "saml":
 		return json.Unmarshal(data, &v.Saml)
 	}
-	return fmt.Errorf("tagged union type must have a %q property whose value is one of %s", "type", []string{"builtin", "saml", "openidconnect", "http-header", "github", "gitlab", "bitbucketcloud", "gerrit", "gerrit2"})
+	return fmt.Errorf("tagged union type must have a %q property whose value is one of %s", "type", []string{"azureDevOps", "bitbucketcloud", "builtin", "gerrit", "github", "gitlab", "http-header", "openidconnect", "saml"})
 }
 
 // AzureDevOpsAuthProvider description: Azure auth provider
@@ -190,7 +190,7 @@ type AzureDevOpsAuthProvider struct {
 	// ApiScope description: The OAuth API scope that should be used
 	ApiScope string `json:"apiScope,omitempty"`
 	// ClientID description: The app ID of the Azure OAuth app.
-	ClientID string `json:"clientID,omitempty"`
+	ClientID string `json:"clientID"`
 	// ClientSecret description: The client Secret of the Azure OAuth app.
 	ClientSecret string `json:"clientSecret"`
 	DisplayName  string `json:"displayName,omitempty"`
@@ -899,13 +899,6 @@ type FusionClient struct {
 
 // GerritAuthProvider description: Gerrit auth provider
 type GerritAuthProvider struct {
-	Type string `json:"type"`
-	// Url description: URL of the Gerrit instance, such as https://gerrit-review.googlesource.com or https://gerrit.example.com.
-	Url string `json:"url"`
-}
-
-// GerritAuthProvider2 description: Gerrit auth provider
-type GerritAuthProvider2 struct {
 	Type string `json:"type"`
 	// Url description: URL of the Gerrit instance, such as https://gerrit-review.googlesource.com or https://gerrit.example.com.
 	Url string `json:"url"`

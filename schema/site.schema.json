@@ -1602,30 +1602,28 @@
           "type": {
             "type": "string",
             "enum": [
+              "azureDevOps",
+              "bitbucketcloud",
               "builtin",
-              "saml",
-              "openidconnect",
-              "http-header",
-              "azuredevops",
+              "gerrit",
               "github",
               "gitlab",
-              "bitbucketcloud",
-              "gerrit",
-              "gerrit2"
+              "http-header",
+              "openidconnect",
+              "saml"
             ]
           }
         },
         "oneOf": [
-          { "$ref": "#/definitions/BuiltinAuthProvider" },
-          { "$ref": "#/definitions/SAMLAuthProvider" },
-          { "$ref": "#/definitions/OpenIDConnectAuthProvider" },
-          { "$ref": "#/definitions/HTTPHeaderAuthProvider" },
           { "$ref": "#/definitions/AzureDevOpsAuthProvider" },
+          { "$ref": "#/definitions/BitbucketCloudAuthProvider" },
+          { "$ref": "#/definitions/BuiltinAuthProvider" },
+          { "$ref": "#/definitions/GerritAuthProvider" },
           { "$ref": "#/definitions/GitHubAuthProvider" },
           { "$ref": "#/definitions/GitLabAuthProvider" },
-          { "$ref": "#/definitions/BitbucketCloudAuthProvider" },
-          { "$ref": "#/definitions/GerritAuthProvider" },
-          { "$ref": "#/definitions/GerritAuthProvider2" }
+          { "$ref": "#/definitions/HTTPHeaderAuthProvider" },
+          { "$ref": "#/definitions/OpenIDConnectAuthProvider" },
+          { "$ref": "#/definitions/SAMLAuthProvider" }
         ],
         "!go": {
           "taggedUnionType": true
@@ -2217,32 +2215,15 @@
         }
       }
     },
-    "GerritAuthProvider2": {
-      "description": "Gerrit auth provider",
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["type", "url"],
-      "properties": {
-        "type": {
-          "type": "string",
-          "const": "gerrit2"
-        },
-        "url": {
-          "type": "string",
-          "description": "URL of the Gerrit instance, such as https://gerrit-review.googlesource.com or https://gerrit.example.com.",
-          "default": "https://gerrit-review.googlesource.com/"
-        }
-      }
-    },
     "AzureDevOpsAuthProvider": {
       "description": "Azure auth provider",
       "type": "object",
       "additionalProperties": false,
-      "required": ["type", "clientKey", "clientSecret"],
+      "required": ["type", "clientID", "clientSecret"],
       "properties": {
         "type": {
           "type": "string",
-          "const": "azuredevops"
+          "const": "azureDevOps"
         },
         "url": {
           "type": "string",

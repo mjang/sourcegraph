@@ -62,11 +62,11 @@ type Provider struct {
 
 func parseConfig(logger log.Logger, cfg conftypes.SiteConfigQuerier, db database.DB) (ps []Provider, problems conf.Problems) {
 	for _, pr := range cfg.SiteConfig().AuthProviders {
-		if pr.Azuredevops == nil {
+		if pr.AzureDevOps == nil {
 			continue
 		}
 
-		provider, providerProblems := parseProvider(logger, pr.Azuredevops, db, pr)
+		provider, providerProblems := parseProvider(logger, pr.AzureDevOps, db, pr)
 		problems = append(problems, conf.NewSiteProblems(providerProblems...)...)
 
 		if provider == nil {
@@ -74,7 +74,7 @@ func parseConfig(logger log.Logger, cfg conftypes.SiteConfigQuerier, db database
 		}
 
 		ps = append(ps, Provider{
-			AzureDevOpsAuthProvider: pr.Azuredevops,
+			AzureDevOpsAuthProvider: pr.AzureDevOps,
 			Provider:                provider,
 		})
 	}
@@ -193,9 +193,9 @@ func azureDevOpsClientFromAuthURL(authURL, oauthToken string) (*azuredevops.Clie
 	baseURL.Fragment = ""
 
 	// TODO: What urn do we need? Or do we even need it?
-	return azuredevops.NewClientProvider(urnAzuredevopsOAuth, baseURL, nil).GetOAuthClient(oauthToken), nil
+	return azuredevops.NewClientProvider(urnAzureDevOpsOAuth, baseURL, nil).GetOAuthClient(oauthToken), nil
 }
 
 const authPrefix = auth.AuthURLPrefix + "/azuredevops"
 const sessionKey = "azuredevopsoauth@0"
-const urnAzuredevopsOAuth = "AzuredevopsOAuth"
+const urnAzureDevOpsOAuth = "AzureDevOpsOAuth"
