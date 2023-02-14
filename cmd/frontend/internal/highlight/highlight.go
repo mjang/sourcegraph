@@ -462,7 +462,7 @@ func Code(ctx context.Context, p Params) (response *HighlightedCode, aborted boo
 	// Instead, in Sourcegraph App we defer to Chroma for syntax highlighting.
 	isSingleProgram := deploy.IsDeployTypeSingleProgram(deploy.Type())
 	if isSingleProgram {
-		document, err := highlightWithChroma(ctx, code, p.Filepath)
+		document, err := highlightWithChroma(code, p.Filepath)
 		if err != nil {
 			return unhighlightedCode(err, code)
 		}

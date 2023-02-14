@@ -1,8 +1,6 @@
 package highlight
 
 import (
-	"context"
-
 	"github.com/alecthomas/chroma/v2"
 	"github.com/alecthomas/chroma/v2/lexers"
 	"github.com/sourcegraph/scip/bindings/go/scip"
@@ -11,7 +9,7 @@ import (
 )
 
 // returns (nil, nil) if highlighting the given language is not supported.
-func highlightWithChroma(ctx context.Context, code string, filepath string) (*scip.Document, error) {
+func highlightWithChroma(code string, filepath string) (*scip.Document, error) {
 	// Identify the Chroma lexer to use.
 	lexer := lexers.Match(filepath)
 	if lexer == nil {
