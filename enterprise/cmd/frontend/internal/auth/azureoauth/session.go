@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/pkg/errors"
+	"github.com/sourcegraph/log"
 	"github.com/sourcegraph/sourcegraph/enterprise/cmd/frontend/internal/auth/oauth"
 	"github.com/sourcegraph/sourcegraph/internal/actor"
 	"github.com/sourcegraph/sourcegraph/internal/database"
@@ -26,6 +27,9 @@ type sessionIssuerHelper struct {
 // TODO: Implement
 func (s *sessionIssuerHelper) GetOrCreateUser(ctx context.Context, token *oauth2.Token, anonymousUserID, firstSourceURL, lastSourceURL string) (actr *actor.Actor, safeErrMsg string, err error) {
 	// user, err :=
+	l := log.Scoped("sessionIssuerHelper.GetOrCreateUser", "get or create user logger")
+	l.Warn("here")
+
 	err = errors.New("GetOrCreateUser: not implemented")
 	return
 }

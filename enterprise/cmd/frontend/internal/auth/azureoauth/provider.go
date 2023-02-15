@@ -1,6 +1,7 @@
 package azureoauth
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -61,12 +62,24 @@ type Provider struct {
 }
 
 func parseConfig(logger log.Logger, cfg conftypes.SiteConfigQuerier, db database.DB) (ps []Provider, problems conf.Problems) {
+	// TODO: Abstract away in a function maybe for DRY.
+	externalURL, err := url.Parse(cfg.SiteConfig().ExternalURL)
+	if err != nil {
+		problems = append(problems, conf.NewSiteProblem("Could not parse `externalURL`, which is needed to determine the OAuth callback URL."))
+
+		return ps, problems
+	}
+
+	callbackURL := *externalURL
+	callbackURL.Path = "/.auth/azuredevops/callback"
+
 	for _, pr := range cfg.SiteConfig().AuthProviders {
 		if pr.AzureDevOps == nil {
 			continue
 		}
 
-		provider, providerProblems := parseProvider(logger, pr.AzureDevOps, db, pr)
+		// FIXME: If we're passing pr and pr.AzureDevOps, might as well just pass pr.
+		provider, providerProblems := parseProvider(logger, pr.AzureDevOps, db, pr, callbackURL)
 		problems = append(problems, conf.NewSiteProblems(providerProblems...)...)
 
 		if provider == nil {
@@ -82,7 +95,7 @@ func parseConfig(logger log.Logger, cfg conftypes.SiteConfigQuerier, db database
 	return ps, problems
 }
 
-func parseProvider(logger log.Logger, p *schema.AzureDevOpsAuthProvider, db database.DB, sourceCfg schema.AuthProviders) (provider *oauth.Provider, messages []string) {
+func parseProvider(logger log.Logger, p *schema.AzureDevOpsAuthProvider, db database.DB, sourceCfg schema.AuthProviders, callbackURL url.URL) (provider *oauth.Provider, messages []string) {
 	// TODO: Handle empty p.Url. Or do I need to? I have a default?
 	// app url is vscode
 	parsedURL, err := url.Parse(p.Url)
@@ -102,13 +115,10 @@ func parseProvider(logger log.Logger, p *schema.AzureDevOpsAuthProvider, db data
 				ClientSecret: p.ClientSecret,
 				Scopes:       strings.Split(p.ApiScope, ","),
 				Endpoint: oauth2.Endpoint{
-					AuthURL: parsedURL.ResolveReference(&url.URL{
-						Path: "/oauth2/authorize",
-					}).String(),
-					TokenURL: parsedURL.ResolveReference(&url.URL{
-						Path: "/oauth2/token",
-					}).String(),
+					AuthURL:  "https://app.vssps.visualstudio.com/oauth2/authorize",
+					TokenURL: "https://app.vssps.visualstudio.com/oauth2/token",
 				},
+				RedirectURL: callbackURL.String(),
 			}
 		},
 		SourceConfig: sourceCfg,
@@ -132,18 +142,55 @@ func parseProvider(logger log.Logger, p *schema.AzureDevOpsAuthProvider, db data
 	}), messages
 }
 
+const (
+	errorKey key = iota
+)
+
+func ErrorFromContext(ctx context.Context) error {
+	err, ok := ctx.Value(errorKey).(error)
+	if !ok {
+		return fmt.Errorf("Context missing error value")
+	}
+	return err
+}
+
+func failureHandler(w http.ResponseWriter, req *http.Request) {
+	l := log.Scoped("azuredevops.failureHandler", "failureHandler")
+	l.Warn("here")
+
+	ctx := req.Context()
+	err := ErrorFromContext(ctx)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	// should be unreachable, ErrorFromContext always returns some non-nil error
+	http.Error(w, "", http.StatusBadRequest)
+}
+
 func loginHandler(c oauth2.Config) http.Handler {
-	return oauth2Login.LoginHandler(&c, nil)
+	// c.RedirectURL
+	l := log.Scoped("azuredevops.loginHandler", "loginHandler")
+	l.Warn("here", log.String("oauth2.Config", fmt.Sprintf("%#v", c)))
+	return oauth2Login.LoginHandler(&c, http.HandlerFunc(failureHandler))
 }
 
 func callbackHandler(logger log.Logger, config *oauth2.Config, success http.Handler) http.Handler {
-	success = azureDevOpsHandler(logger, config, success, gologin.DefaultFailureHandler)
+	l := log.Scoped("azuredevops.callbackHandler", "callbackHandler")
+	l.Warn("here", log.String("oauth2.Config", fmt.Sprintf("%#v", config)))
 
-	return oauth2Login.CallbackHandler(config, success, gologin.DefaultFailureHandler)
+	success = azureDevOpsHandler(logger, config, success, http.HandlerFunc(failureHandler))
+
+	return oauth2Login.CallbackHandler(config, success, http.HandlerFunc(failureHandler))
 }
 
 func azureDevOpsHandler(logger log.Logger, config *oauth2.Config, success, failure http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, req *http.Request) {
+
+		l := log.Scoped("azureDevOpsSuccessHandler", "azure dev ops handler")
+		l.Warn("here", log.String("oauth2.Config", fmt.Sprintf("%#v", config)))
+
 		ctx := req.Context()
 		token, err := oauth2Login.TokenFromContext(ctx)
 		if err != nil {
@@ -160,7 +207,7 @@ func azureDevOpsHandler(logger log.Logger, config *oauth2.Config, success, failu
 			return
 		}
 
-		// TODO: PRobably don't need this
+		// TODO: Probably don't need this
 		// user, err := azureClient.GetUser(ctx, "")
 
 		// FIXME: Implement this.
