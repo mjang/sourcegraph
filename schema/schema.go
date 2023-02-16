@@ -186,7 +186,7 @@ func (v *AuthProviders) UnmarshalJSON(data []byte) error {
 // AzureDevOpsAuthProvider description: Azure auth provider
 type AzureDevOpsAuthProvider struct {
 	// AllowSignup description: Allows new visitors to sign up for accounts Azure DevOps authentication. If false, users signing in via Azure DevOps must have an existing Sourcegraph account, which will be linked to their Azure DevOps identity after sign-in.
-	AllowSignup bool `json:"allowSignup,omitempty"`
+	AllowSignup *bool `json:"allowSignup,omitempty"`
 	// ApiScope description: The OAuth API scope that should be used
 	ApiScope string `json:"apiScope,omitempty"`
 	// ClientID description: The app ID of the Azure OAuth app.

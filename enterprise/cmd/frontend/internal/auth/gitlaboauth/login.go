@@ -43,6 +43,7 @@ func gitlabHandler(config *oauth2.Config, success, failure http.Handler) http.Ha
 
 		gitlabClient, err := gitlabClientFromAuthURL(config.Endpoint.AuthURL, token.AccessToken)
 		if err != nil {
+			// TODO: Don't swallow the actual error here.
 			ctx = gologin.WithError(ctx, errors.Errorf("could not parse AuthURL %s", config.Endpoint.AuthURL))
 			failure.ServeHTTP(w, req.WithContext(ctx))
 			return
@@ -54,11 +55,13 @@ func gitlabHandler(config *oauth2.Config, success, failure http.Handler) http.Ha
 			// https://github.com/sourcegraph/sourcegraph/pull/20000
 			logger.Warn("invalid response", log.Error(err))
 		}
+		// TODO: Merge these two checks of err != nil?
 		if err != nil {
 			ctx = gologin.WithError(ctx, err)
 			failure.ServeHTTP(w, req.WithContext(ctx))
 			return
 		}
+		// TODO: Make this private?
 		ctx = WithUser(ctx, user)
 		success.ServeHTTP(w, req.WithContext(ctx))
 	}

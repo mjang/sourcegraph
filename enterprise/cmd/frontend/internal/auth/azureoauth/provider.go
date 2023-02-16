@@ -21,7 +21,9 @@ import (
 	"github.com/sourcegraph/sourcegraph/internal/conf/conftypes"
 	"github.com/sourcegraph/sourcegraph/internal/database"
 	"github.com/sourcegraph/sourcegraph/internal/extsvc"
+	extsvcauth "github.com/sourcegraph/sourcegraph/internal/extsvc/auth"
 	"github.com/sourcegraph/sourcegraph/internal/extsvc/azuredevops"
+	"github.com/sourcegraph/sourcegraph/internal/httpcli"
 	"github.com/sourcegraph/sourcegraph/schema"
 )
 
@@ -115,8 +117,9 @@ func parseProvider(logger log.Logger, p *schema.AzureDevOpsAuthProvider, db data
 				ClientSecret: p.ClientSecret,
 				Scopes:       strings.Split(p.ApiScope, ","),
 				Endpoint: oauth2.Endpoint{
-					AuthURL:  "https://app.vssps.visualstudio.com/oauth2/authorize",
-					TokenURL: "https://app.vssps.visualstudio.com/oauth2/token",
+					AuthURL:   "https://app.vssps.visualstudio.com/oauth2/authorize",
+					TokenURL:  "https://app.vssps.visualstudio.com/oauth2/token",
+					AuthStyle: oauth2.AuthStyleInParams,
 				},
 				RedirectURL: callbackURL.String(),
 			}
@@ -176,13 +179,14 @@ func loginHandler(c oauth2.Config) http.Handler {
 	return oauth2Login.LoginHandler(&c, http.HandlerFunc(failureHandler))
 }
 
+// TODO: Better naming for callbackHandler vs CallbackHandler? Surely this can be simplified?
 func callbackHandler(logger log.Logger, config *oauth2.Config, success http.Handler) http.Handler {
 	l := log.Scoped("azuredevops.callbackHandler", "callbackHandler")
 	l.Warn("here", log.String("oauth2.Config", fmt.Sprintf("%#v", config)))
 
 	success = azureDevOpsHandler(logger, config, success, http.HandlerFunc(failureHandler))
 
-	return oauth2Login.CallbackHandler(config, success, http.HandlerFunc(failureHandler))
+	return CallbackHandler(config, success, gologin.DefaultFailureHandler)
 }
 
 func azureDevOpsHandler(logger log.Logger, config *oauth2.Config, success, failure http.Handler) http.Handler {
@@ -193,22 +197,46 @@ func azureDevOpsHandler(logger log.Logger, config *oauth2.Config, success, failu
 
 		ctx := req.Context()
 		token, err := oauth2Login.TokenFromContext(ctx)
+
 		if err != nil {
 			ctx = gologin.WithError(ctx, err)
 			failure.ServeHTTP(w, req.WithContext(ctx))
 			return
 		}
 
+		l.Warn("token", log.String("oauth2 token", token.AccessToken))
+
 		// TODO: Finish implementation
-		_, err = azureDevOpsClientFromAuthURL(config.Endpoint.AuthURL, token.AccessToken)
+		azureClient, err := azureDevOpsClientFromAuthURL(config.Endpoint.AuthURL, token.AccessToken)
 		if err != nil {
-			ctx = gologin.WithError(ctx, errors.Errorf("could not parse AuthURL %s", config.Endpoint.AuthURL))
+			logger.Error("failed to create azuredevops.Client", log.String("error", err.Error()))
+			ctx = gologin.WithError(ctx, errors.Errorf("failed to create HTTP client for azuredevops with AuthURL %q", config.Endpoint.AuthURL))
 			failure.ServeHTTP(w, req.WithContext(ctx))
 			return
 		}
 
 		// TODO: Probably don't need this
-		// user, err := azureClient.GetUser(ctx, "")
+		profile, err := azureClient.AzureServicesProfile(ctx)
+		if err != nil {
+			msg := "failed to get Azure profile after oauth2 callback"
+			logger.Error(msg, log.String("error", err.Error()))
+			ctx = gologin.WithError(ctx, errors.Wrap(err, msg))
+			failure.ServeHTTP(w, req.WithContext(ctx))
+			return
+		}
+
+		if profile.ID == "" || profile.EmailAddress == "" {
+			msg := "bad Azure profile in API response"
+			logger.Error(msg, log.String("profile", fmt.Sprintf("%#v", profile)))
+
+			ctx = gologin.WithError(
+				ctx,
+				errors.Errorf(fmt.Sprintf("%s: %#v", msg, profile)),
+			)
+
+			failure.ServeHTTP(w, req.WithContext(ctx))
+			return
+		}
 
 		// FIXME: Implement this.
 		// err = validateResponse(user, err)
@@ -218,18 +246,18 @@ func azureDevOpsHandler(logger log.Logger, config *oauth2.Config, success, failu
 		// 	// https://github.com/sourcegraph/sourcegraph/pull/20000
 		// 	logger.Warn("invalid response", log.Error(err))
 		// }
-		if err != nil {
-			ctx = gologin.WithError(ctx, err)
-			failure.ServeHTTP(w, req.WithContext(ctx))
-			return
-		}
-		// ctx = withUser(ctx, user)
+		// if err != nil {
+		// 	ctx = gologin.WithError(ctx, err)
+		// 	failure.ServeHTTP(w, req.WithContext(ctx))
+		// 	return
+		// }
+
+		ctx = withUser(ctx, profile)
 		success.ServeHTTP(w, req.WithContext(ctx))
 	}
 	return http.HandlerFunc(fn)
 }
 
-// TODO: Implement this.
 func azureDevOpsClientFromAuthURL(authURL, oauthToken string) (*azuredevops.Client, error) {
 	baseURL, err := url.Parse(authURL)
 	if err != nil {
@@ -239,8 +267,19 @@ func azureDevOpsClientFromAuthURL(authURL, oauthToken string) (*azuredevops.Clie
 	baseURL.RawQuery = ""
 	baseURL.Fragment = ""
 
-	// TODO: What urn do we need? Or do we even need it?
-	return azuredevops.NewClientProvider(urnAzureDevOpsOAuth, baseURL, nil).GetOAuthClient(oauthToken), nil
+	httpCli, err := httpcli.ExternalClientFactory.Doer()
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create http client, this is likely a misconfiguration")
+	}
+
+	cli, err := azuredevops.NewClient(
+		urnAzureDevOpsOAuth,
+		baseURL,
+		&extsvcauth.OAuthBearerToken{Token: oauthToken},
+		httpCli,
+	)
+
+	return cli, nil
 }
 
 const authPrefix = auth.AuthURLPrefix + "/azuredevops"
