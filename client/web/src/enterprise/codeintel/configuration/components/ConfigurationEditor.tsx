@@ -45,7 +45,10 @@ export const ConfigurationEditor: FunctionComponent<ConfigurationEditorProps> = 
 
     const [dirty, setDirty] = useState<boolean>()
     const [editor, setEditor] = useState<editor.ICodeEditor>()
-    const infer = useCallback(() => editor?.setValue(inferredConfiguration), [editor, inferredConfiguration])
+    const infer = useCallback(
+        () => editor?.setValue(inferredConfiguration?.configuration || ''),
+        [editor, inferredConfiguration]
+    )
 
     const customToolbar = useMemo<{
         saveToolbar: FunctionComponent<SaveToolbarProps & IndexConfigurationSaveToolbarProps>
@@ -58,7 +61,7 @@ export const ConfigurationEditor: FunctionComponent<ConfigurationEditorProps> = 
                     ...props,
                     onInfer: infer,
                     loading: inferredConfiguration === undefined,
-                    inferEnabled: !!inferredConfiguration && configuration !== inferredConfiguration,
+                    inferEnabled: !!inferredConfiguration && configuration !== inferredConfiguration.configuration,
                 }
                 mergedProps.willShowError = () => !mergedProps.saving
                 mergedProps.saveDiscardDisabled = () => mergedProps.saving || !dirty

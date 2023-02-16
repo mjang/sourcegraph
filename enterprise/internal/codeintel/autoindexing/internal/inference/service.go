@@ -84,7 +84,14 @@ func newService(
 // will overwrite them (to disable or change default behavior). Each recognizer's generate function
 // is invoked and the resulting index jobs are combined into a flattened list.
 func (s *Service) InferIndexJobs(ctx context.Context, repo api.RepoName, commit, overrideScript string) (_ []config.IndexJob, err error) {
-	ctx, _, endObservation := s.operations.inferIndexJobs.With(ctx, &err, observation.Args{LogFields: []otelog.Field{
+	var nonLimitError error
+	defer func() {
+		if !errors.As(err, &LimitError{}) {
+			nonLimitError = err
+		}
+	}()
+
+	ctx, _, endObservation := s.operations.inferIndexJobs.With(ctx, &nonLimitError, observation.Args{LogFields: []otelog.Field{
 		otelog.String("repo", string(repo)),
 		otelog.String("commit", commit),
 	}})
@@ -131,7 +138,14 @@ func (s *Service) InferIndexJobs(ctx context.Context, repo api.RepoName, commit,
 // will overwrite them (to disable or change default behavior). Each recognizer's hints function is
 // invoked and the resulting index job hints are combined into a flattened list.
 func (s *Service) InferIndexJobHints(ctx context.Context, repo api.RepoName, commit, overrideScript string) (_ []config.IndexJobHint, err error) {
-	ctx, _, endObservation := s.operations.inferIndexJobHints.With(ctx, &err, observation.Args{LogFields: []otelog.Field{
+	var nonLimitError error
+	defer func() {
+		if !errors.As(err, &LimitError{}) {
+			nonLimitError = err
+		}
+	}()
+
+	ctx, _, endObservation := s.operations.inferIndexJobHints.With(ctx, &nonLimitError, observation.Args{LogFields: []otelog.Field{
 		otelog.String("repo", string(repo)),
 		otelog.String("commit", commit),
 	}})
@@ -289,7 +303,14 @@ func (s *Service) invokeRecognizers(
 	invocationContext invocationContext,
 	recognizers []*luatypes.Recognizer,
 ) (_ []indexJobOrHint, err error) {
-	ctx, _, endObservation := s.operations.invokeRecognizers.With(ctx, &err, observation.Args{})
+	var nonLimitError error
+	defer func() {
+		if !errors.As(err, &LimitError{}) {
+			nonLimitError = err
+		}
+	}()
+
+	ctx, _, endObservation := s.operations.invokeRecognizers.With(ctx, &nonLimitError, observation.Args{})
 	defer endObservation(1, observation.Args{})
 
 	patternsForPaths := luatypes.FlattenRecognizerPatterns(recognizers, false)
@@ -356,7 +377,14 @@ func (s *Service) resolveFileContents(
 	paths []string,
 	patternsForContent []*luatypes.PathPattern,
 ) (_ map[string]string, err error) {
-	ctx, traceLogger, endObservation := s.operations.resolveFileContents.With(ctx, &err, observation.Args{})
+	var nonLimitError error
+	defer func() {
+		if !errors.As(err, &LimitError{}) {
+			nonLimitError = err
+		}
+	}()
+
+	ctx, traceLogger, endObservation := s.operations.resolveFileContents.With(ctx, &nonLimitError, observation.Args{})
 	defer endObservation(1, observation.Args{})
 
 	relevantPaths, err := filterPathsByPatterns(paths, patternsForContent)

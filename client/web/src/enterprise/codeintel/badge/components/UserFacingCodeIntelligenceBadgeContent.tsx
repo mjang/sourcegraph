@@ -79,7 +79,7 @@ export const UserFacingCodeIntelligenceBadgeContent: React.FunctionComponent<
                                 name,
                                 uploads: uploadsByIndexerName.get(name) || [],
                                 indexes: indexesByIndexerName.get(name) || [],
-                                indexer,
+                                indexer: indexer && { key: indexer.name, ...indexer },
                                 additionalIndexer,
                             }}
                             className={className}

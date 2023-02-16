@@ -97,6 +97,9 @@ type MockAutoIndexingService struct {
 	// object controlling the behavior of the method
 	// SetRequestLanguageSupport.
 	SetRequestLanguageSupportFunc *AutoIndexingServiceSetRequestLanguageSupportFunc
+	// SummaryFunc is an instance of a mock function object controlling the
+	// behavior of the method Summary.
+	SummaryFunc *AutoIndexingServiceSummaryFunc
 	// UpdateIndexConfigurationByRepositoryIDFunc is an instance of a mock
 	// function object controlling the behavior of the method
 	// UpdateIndexConfigurationByRepositoryID.
@@ -215,6 +218,11 @@ func NewMockAutoIndexingService() *MockAutoIndexingService {
 		},
 		SetRequestLanguageSupportFunc: &AutoIndexingServiceSetRequestLanguageSupportFunc{
 			defaultHook: func(context.Context, int, string) (r0 error) {
+				return
+			},
+		},
+		SummaryFunc: &AutoIndexingServiceSummaryFunc{
+			defaultHook: func(context.Context) (r0 shared.Summary, r1 error) {
 				return
 			},
 		},
@@ -341,6 +349,11 @@ func NewStrictMockAutoIndexingService() *MockAutoIndexingService {
 				panic("unexpected invocation of MockAutoIndexingService.SetRequestLanguageSupport")
 			},
 		},
+		SummaryFunc: &AutoIndexingServiceSummaryFunc{
+			defaultHook: func(context.Context) (shared.Summary, error) {
+				panic("unexpected invocation of MockAutoIndexingService.Summary")
+			},
+		},
 		UpdateIndexConfigurationByRepositoryIDFunc: &AutoIndexingServiceUpdateIndexConfigurationByRepositoryIDFunc{
 			defaultHook: func(context.Context, int, []byte) error {
 				panic("unexpected invocation of MockAutoIndexingService.UpdateIndexConfigurationByRepositoryID")
@@ -419,6 +432,9 @@ func NewMockAutoIndexingServiceFrom(i AutoIndexingService) *MockAutoIndexingServ
 		},
 		SetRequestLanguageSupportFunc: &AutoIndexingServiceSetRequestLanguageSupportFunc{
 			defaultHook: i.SetRequestLanguageSupport,
+		},
+		SummaryFunc: &AutoIndexingServiceSummaryFunc{
+			defaultHook: i.Summary,
 		},
 		UpdateIndexConfigurationByRepositoryIDFunc: &AutoIndexingServiceUpdateIndexConfigurationByRepositoryIDFunc{
 			defaultHook: i.UpdateIndexConfigurationByRepositoryID,
@@ -2922,6 +2938,111 @@ func (c AutoIndexingServiceSetRequestLanguageSupportFuncCall) Args() []interface
 // invocation.
 func (c AutoIndexingServiceSetRequestLanguageSupportFuncCall) Results() []interface{} {
 	return []interface{}{c.Result0}
+}
+
+// AutoIndexingServiceSummaryFunc describes the behavior when the Summary
+// method of the parent MockAutoIndexingService instance is invoked.
+type AutoIndexingServiceSummaryFunc struct {
+	defaultHook func(context.Context) (shared.Summary, error)
+	hooks       []func(context.Context) (shared.Summary, error)
+	history     []AutoIndexingServiceSummaryFuncCall
+	mutex       sync.Mutex
+}
+
+// Summary delegates to the next hook function in the queue and stores the
+// parameter and result values of this invocation.
+func (m *MockAutoIndexingService) Summary(v0 context.Context) (shared.Summary, error) {
+	r0, r1 := m.SummaryFunc.nextHook()(v0)
+	m.SummaryFunc.appendCall(AutoIndexingServiceSummaryFuncCall{v0, r0, r1})
+	return r0, r1
+}
+
+// SetDefaultHook sets function that is called when the Summary method of
+// the parent MockAutoIndexingService instance is invoked and the hook queue
+// is empty.
+func (f *AutoIndexingServiceSummaryFunc) SetDefaultHook(hook func(context.Context) (shared.Summary, error)) {
+	f.defaultHook = hook
+}
+
+// PushHook adds a function to the end of hook queue. Each invocation of the
+// Summary method of the parent MockAutoIndexingService instance invokes the
+// hook at the front of the queue and discards it. After the queue is empty,
+// the default hook function is invoked for any future action.
+func (f *AutoIndexingServiceSummaryFunc) PushHook(hook func(context.Context) (shared.Summary, error)) {
+	f.mutex.Lock()
+	f.hooks = append(f.hooks, hook)
+	f.mutex.Unlock()
+}
+
+// SetDefaultReturn calls SetDefaultHook with a function that returns the
+// given values.
+func (f *AutoIndexingServiceSummaryFunc) SetDefaultReturn(r0 shared.Summary, r1 error) {
+	f.SetDefaultHook(func(context.Context) (shared.Summary, error) {
+		return r0, r1
+	})
+}
+
+// PushReturn calls PushHook with a function that returns the given values.
+func (f *AutoIndexingServiceSummaryFunc) PushReturn(r0 shared.Summary, r1 error) {
+	f.PushHook(func(context.Context) (shared.Summary, error) {
+		return r0, r1
+	})
+}
+
+func (f *AutoIndexingServiceSummaryFunc) nextHook() func(context.Context) (shared.Summary, error) {
+	f.mutex.Lock()
+	defer f.mutex.Unlock()
+
+	if len(f.hooks) == 0 {
+		return f.defaultHook
+	}
+
+	hook := f.hooks[0]
+	f.hooks = f.hooks[1:]
+	return hook
+}
+
+func (f *AutoIndexingServiceSummaryFunc) appendCall(r0 AutoIndexingServiceSummaryFuncCall) {
+	f.mutex.Lock()
+	f.history = append(f.history, r0)
+	f.mutex.Unlock()
+}
+
+// History returns a sequence of AutoIndexingServiceSummaryFuncCall objects
+// describing the invocations of this function.
+func (f *AutoIndexingServiceSummaryFunc) History() []AutoIndexingServiceSummaryFuncCall {
+	f.mutex.Lock()
+	history := make([]AutoIndexingServiceSummaryFuncCall, len(f.history))
+	copy(history, f.history)
+	f.mutex.Unlock()
+
+	return history
+}
+
+// AutoIndexingServiceSummaryFuncCall is an object that describes an
+// invocation of method Summary on an instance of MockAutoIndexingService.
+type AutoIndexingServiceSummaryFuncCall struct {
+	// Arg0 is the value of the 1st argument passed to this method
+	// invocation.
+	Arg0 context.Context
+	// Result0 is the value of the 1st result returned from this method
+	// invocation.
+	Result0 shared.Summary
+	// Result1 is the value of the 2nd result returned from this method
+	// invocation.
+	Result1 error
+}
+
+// Args returns an interface slice containing the arguments of this
+// invocation.
+func (c AutoIndexingServiceSummaryFuncCall) Args() []interface{} {
+	return []interface{}{c.Arg0}
+}
+
+// Results returns an interface slice containing the results of this
+// invocation.
+func (c AutoIndexingServiceSummaryFuncCall) Results() []interface{} {
+	return []interface{}{c.Result0, c.Result1}
 }
 
 // AutoIndexingServiceUpdateIndexConfigurationByRepositoryIDFunc describes

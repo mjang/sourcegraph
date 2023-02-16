@@ -14,13 +14,19 @@ export const INFERRED_CONFIGURATION = gql`
     fragment RepositoryInferredIndexConfigurationFields on Repository {
         __typename
         indexConfiguration {
-            inferredConfiguration
+            inferredConfiguration {
+                configuration
+                limitError
+            }
         }
     }
 `
 
 interface UseInferredConfigResult {
-    inferredConfiguration: string
+    inferredConfiguration: {
+        configuration: string
+        limitError?: string
+    } | null
     loadingInferred: boolean
     inferredError: ApolloError | undefined
 }
@@ -31,7 +37,7 @@ export const useInferredConfig = (id: string): UseInferredConfigResult => {
     })
 
     const inferredConfiguration =
-        (data?.node?.__typename === 'Repository' && data.node.indexConfiguration?.inferredConfiguration) || ''
+        (data?.node?.__typename === 'Repository' && data.node.indexConfiguration?.inferredConfiguration) || null
 
     return {
         inferredConfiguration,
