@@ -12,7 +12,7 @@ type CodeIntelIndexer struct {
 // AllIndexers is a list of all detectable/suggested indexers known to Sourcegraph.
 // Two indexers with the same language key will be preferred according to the given order.
 var AllIndexers = []CodeIntelIndexer{
-	// C/C++
+	// C++
 	makeInternalIndexer("C++", "scip-clang"),
 	makeInternalIndexer("C++", "lsif-clang"),
 	makeInternalIndexer("C++", "lsif-cpp"),
@@ -21,7 +21,7 @@ var AllIndexers = []CodeIntelIndexer{
 	makeInternalIndexer("Dart", "lsif-dart"),
 	makeIndexer("Dart", "lsif_indexer", "github.com/Workiva/lsif_indexer"),
 
-	// C#, F# (.xls wtf :screamcat:)
+	// DotNet
 	makeInternalIndexer("DotNet", "scip-dotnet"),
 	makeIndexer("DotNet", "lsif-dotnet", "github.com/tcz717/LsifDotnet"),
 
@@ -35,7 +35,7 @@ var AllIndexers = []CodeIntelIndexer{
 	// Jsonnet
 	makeInternalIndexer("Jsonnet", "lsif-jsonnet"),
 
-	// Java/Kotlin/Scala
+	// JVMk
 	makeInternalIndexer("JVM", "scip-java"),
 	makeInternalIndexer("JVM", "lsif-java"),
 
@@ -58,27 +58,26 @@ var AllIndexers = []CodeIntelIndexer{
 	// Terraform
 	makeIndexer("Terraform", "lsif-terraform", "github.com/juliosueiras/lsif-terraform"),
 
-	// TypeScript/JavaScript
+	// TypeScript
 	makeInternalIndexer("TypeScript", "scip-typescript"),
 	makeInternalIndexer("TypeScript", "lsif-node"),
 }
 
-func makeInternalIndexer(key, name string) CodeIntelIndexer {
-	return makeIndexer(
-		key,
-		name,
-		fmt.Sprintf("github.com/sourcegraph/%s", name),
-		fmt.Sprintf("sourcegraph/%s", name),
-	)
-}
-
-func makeIndexer(key, name, urn string, dockerImages ...string) CodeIntelIndexer {
-	return CodeIntelIndexer{
-		LanguageKey:  key,
-		Name:         name,
-		URN:          urn,
-		DockerImages: dockerImages,
-	}
+var extensions = map[string][]string{
+	"C++":        {".c", ".cp", ".cpp", ".cxx", ".h", ".hpp"},
+	"Dart":       {".dart"},
+	"DotNet":     {".cs", ".fs"},
+	"Go":         {".go"},
+	"HIE":        {".hs"},
+	"Jsonnet":    {".jsonnet"},
+	"JVM":        {".java", ".kt", ".scala"},
+	"OCaml":      {".ml"},
+	"PHP":        {".php"},
+	"Python":     {".py"},
+	"Ruby":       {".rb"},
+	"Rust":       {".rs"},
+	"Terraform":  {".tf"},
+	"TypeScript": {".js", ".jsx", ".ts", ".tsx"},
 }
 
 var ImageToIndexer = func() map[string]CodeIntelIndexer {
@@ -108,23 +107,6 @@ var PreferredIndexers = func() map[string]CodeIntelIndexer {
 	return m
 }()
 
-var extensions = map[string][]string{
-	"C++":        {".c", ".cp", ".cpp", ".cxx", ".h", ".hpp"},
-	"Dart":       {".dart"},
-	"DotNet":     {".cs", ".fs"},
-	"Go":         {".go"},
-	"HIE":        {".hs"},
-	"Jsonnet":    {".jsonnet"},
-	"JVM":        {".java", ".kt", ".scala"},
-	"OCaml":      {".ml"},
-	"PHP":        {".php"},
-	"Python":     {".py"},
-	"Ruby":       {".rb"},
-	"Rust":       {".rs"},
-	"Terraform":  {".tf"},
-	"TypeScript": {".js", ".jsx", ".ts", ".tsx"},
-}
-
 // A map of file extension to a list of indexers in order of recommendation from most to least.
 var LanguageToIndexer = func() map[string][]CodeIntelIndexer {
 	m := map[string][]CodeIntelIndexer{}
@@ -136,3 +118,21 @@ var LanguageToIndexer = func() map[string][]CodeIntelIndexer {
 
 	return m
 }()
+
+func makeInternalIndexer(key, name string) CodeIntelIndexer {
+	return makeIndexer(
+		key,
+		name,
+		fmt.Sprintf("github.com/sourcegraph/%s", name),
+		fmt.Sprintf("sourcegraph/%s", name),
+	)
+}
+
+func makeIndexer(key, name, urn string, dockerImages ...string) CodeIntelIndexer {
+	return CodeIntelIndexer{
+		LanguageKey:  key,
+		Name:         name,
+		URN:          urn,
+		DockerImages: dockerImages,
+	}
+}
