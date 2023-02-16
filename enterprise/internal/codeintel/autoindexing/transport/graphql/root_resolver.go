@@ -8,6 +8,7 @@ import (
 	"github.com/graph-gophers/graphql-go"
 	"github.com/opentracing/opentracing-go/log"
 
+	"github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/autoindexing/internal/inference"
 	"github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/autoindexing/shared"
 	sharedresolvers "github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/shared/resolvers"
 	"github.com/sourcegraph/sourcegraph/internal/actor"
@@ -361,32 +362,21 @@ func (r *rootResolver) GetLastIndexScanForRepository(ctx context.Context, reposi
 	return r.autoindexSvc.GetLastIndexScanForRepository(ctx, repositoryID)
 }
 
-func (r *rootResolver) InferedIndexConfiguration(ctx context.Context, repositoryID int, commit string) (_ *config.IndexConfiguration, _ bool, err error) {
-	ctx, _, endObservation := r.operations.inferedIndexConfiguration.With(ctx, &err, observation.Args{
-		LogFields: []log.Field{log.Int("repositoryID", repositoryID), log.String("commit", commit)},
-	})
-	defer endObservation(1, observation.Args{})
+func (r *rootResolver) CodeIntelSummary(ctx context.Context) (_ resolverstubs.CodeIntelSummaryResolver, err error) {
+	ctx, _, endObservation := r.operations.summary.WithErrors(ctx, &err, observation.Args{LogFields: []log.Field{}})
+	endObservation.OnCancel(ctx, 1, observation.Args{})
 
-	maybeConfig, _, err := r.autoindexSvc.InferIndexConfiguration(ctx, repositoryID, commit, true)
-	if err != nil || maybeConfig == nil {
-		return nil, false, err
-	}
-
-	return maybeConfig, true, nil
-}
-
-func (r *rootResolver) InferedIndexConfigurationHints(ctx context.Context, repositoryID int, commit string) (_ []config.IndexJobHint, err error) {
-	ctx, _, endObservation := r.operations.inferedIndexConfigurationHints.With(ctx, &err, observation.Args{
-		LogFields: []log.Field{log.Int("repositoryID", repositoryID), log.String("commit", commit)},
-	})
-	defer endObservation(1, observation.Args{})
-
-	_, hints, err := r.autoindexSvc.InferIndexConfiguration(ctx, repositoryID, commit, true)
+	summary, err := r.autoindexSvc.Summary(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	return hints, nil
+	// Create a new prefetcher here as we only want to cache repositories in the same graphQL request,
+	// not across different request
+	db := r.autoindexSvc.GetUnsafeDB()
+	locationResolver := sharedresolvers.NewCachedLocationResolver(db, gitserver.NewClient())
+
+	return sharedresolvers.NewSummaryResolver(summary, locationResolver), nil
 }
 
 func (r *rootResolver) RepositorySummary(ctx context.Context, id graphql.ID) (_ resolverstubs.CodeIntelRepositorySummaryResolver, err error) {
@@ -444,12 +434,11 @@ func (r *rootResolver) RepositorySummary(ctx context.Context, id graphql.ID) (_ 
 	inferredAvailableIndexers = populateInferredAvailableIndexers(indexJobHints, blocklist, inferredAvailableIndexers)
 
 	inferredAvailableIndexersResolver := make([]sharedresolvers.InferredAvailableIndexers, 0, len(inferredAvailableIndexers))
-	for indexName, indexer := range inferredAvailableIndexers {
+	for _, indexer := range inferredAvailableIndexers {
 		inferredAvailableIndexersResolver = append(inferredAvailableIndexersResolver,
 			sharedresolvers.InferredAvailableIndexers{
-				Roots: indexer.Roots,
-				Index: indexName,
-				URL:   indexer.URL,
+				Indexer: indexer.Indexer,
+				Roots:   indexer.Roots,
 			},
 		)
 	}

@@ -2,14 +2,17 @@ package store
 
 import (
 	"context"
+	"encoding/json"
 	"time"
 
+	"github.com/keegancsmith/sqlf"
 	logger "github.com/sourcegraph/log"
 
 	"github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/autoindexing/shared"
 	"github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/shared/types"
 	"github.com/sourcegraph/sourcegraph/internal/database"
 	"github.com/sourcegraph/sourcegraph/internal/database/basestore"
+	"github.com/sourcegraph/sourcegraph/internal/database/dbutil"
 	"github.com/sourcegraph/sourcegraph/internal/observation"
 )
 
@@ -18,6 +21,8 @@ type Store interface {
 	// Transactions
 	Transact(ctx context.Context) (Store, error)
 	Done(err error) error
+
+	Summary(ctx context.Context) (shared.Summary, error)
 
 	// Commits
 	ProcessStaleSourcedCommits(
@@ -59,6 +64,8 @@ type Store interface {
 	GetUnsafeDB() database.DB
 
 	GetRepoName(ctx context.Context, repositoryID int) (_ string, err error)
+	TopRepositoriesToConfigure(ctx context.Context, limit int) ([]shared.RepositoryWithCount, error)
+	SetConfigurationSummary(ctx context.Context, repositoryID int, numEvents int, availableIndexers map[string]shared.AvailableIndexer) (err error)
 
 	InsertDependencyIndexingJob(ctx context.Context, uploadID int, externalServiceKind string, syncTime time.Time) (id int, err error)
 	ExpireFailedRecords(ctx context.Context, batchSize int, failedIndexMaxAge time.Duration, now time.Time) error
@@ -106,3 +113,99 @@ func (s *store) Done(err error) error {
 func (s *store) GetUnsafeDB() database.DB {
 	return database.NewDBWith(s.logger, s.db)
 }
+
+func (s *store) Summary(ctx context.Context) (shared.Summary, error) {
+	numRepositoriesWithCodeIntelligence, _, err := basestore.ScanFirstInt(s.db.Query(ctx, sqlf.Sprintf(countRepositoriesQuery)))
+	if err != nil {
+		return shared.Summary{}, err
+	}
+
+	repositoriesWithErrors, err := scanRepositoryWithCounts(s.db.Query(ctx, sqlf.Sprintf(repositoriesWithErrorsQuery)))
+	if err != nil {
+		return shared.Summary{}, err
+	}
+
+	repositoryIDsWithConfiguration, err := scanRepositoryWithAvailableIndexers(s.db.Query(ctx, sqlf.Sprintf(repositoiresWithConfigurationQuery)))
+	if err != nil {
+		return shared.Summary{}, err
+	}
+
+	return shared.Summary{
+		NumRepositoriesWithCodeIntelligence: numRepositoriesWithCodeIntelligence,
+		RepositoryIDsWithErrors:             repositoriesWithErrors,
+		RepositoryIDsWithConfiguration:      repositoryIDsWithConfiguration,
+	}, nil
+}
+
+var scanRepositoryWithCounts = basestore.NewSliceScanner(func(s dbutil.Scanner) (rc shared.RepositoryWithCount, _ error) {
+	err := s.Scan(&rc.RepositoryID, &rc.Count)
+	return rc, err
+})
+
+var scanRepositoryWithAvailableIndexers = basestore.NewSliceScanner(func(s dbutil.Scanner) (rai shared.RepositoryWithAvailableIndexers, _ error) {
+	var payload string
+	if err := s.Scan(&rai.RepositoryID, &payload); err != nil {
+		return rai, err
+	}
+	if err := json.Unmarshal([]byte(payload), &rai.AvailableIndexers); err != nil {
+		return rai, err
+	}
+
+	return rai, nil
+})
+
+const countRepositoriesQuery = `
+SELECT
+	COUNT(DISTINCT r.id)
+FROM lsif_uploads u
+JOIN repo r ON r.id = u.repository_id
+WHERE
+	u.state = 'completed' AND
+	r.deleted_at IS NULL AND
+	r.blocked IS NULL
+`
+
+const repositoriesWithErrorsQuery = `
+WITH
+ranked_completed_indexes AS (
+	SELECT
+		u.repository_id,
+		u.state,
+		RANK() OVER (PARTITION BY repository_id, root, indexer ORDER BY finished_at DESC) AS rank
+	FROM lsif_indexes u
+	WHERE u.state NOT IN ('queued', 'processing', 'deleted')
+),
+ranked_completed_uploads AS (
+	SELECT
+		u.repository_id,
+		u.state,
+		RANK() OVER (PARTITION BY repository_id, root, indexer ORDER BY finished_at DESC) AS rank
+	FROM lsif_uploads u
+	WHERE u.state NOT IN ('uploading', 'queued', 'processing', 'deleted')
+),
+ranked_uploads_and_indexes AS (
+	SELECT repository_id FROM ranked_completed_indexes WHERE rank = 1 AND state = 'failed'
+	UNION ALL
+	SELECT repository_id FROM ranked_completed_uploads WHERE rank = 1 AND state = 'failed'
+)
+SELECT
+	r.id,
+	COUNT(*) AS count
+FROM repo r
+JOIN ranked_uploads_and_indexes rui ON rui.repository_id = r.id
+WHERE
+	r.deleted_at IS NULL AND
+	r.blocked IS NULL
+GROUP BY r.id
+ORDER BY count DESC
+`
+
+const repositoiresWithConfigurationQuery = `
+SELECT
+	repository_id,
+	available_indexers
+FROM cached_available_indexers
+WHERE
+	available_indexers != '{}'::jsonb
+ORDER BY length(available_indexers::text) DESC
+`
